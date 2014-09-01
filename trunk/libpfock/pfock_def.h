@@ -35,9 +35,7 @@ typedef enum
 PFockStatus_t PFock_create( BasisSet_t basis,
                             int nprow,      // process topology is nprow by npcol
                             int npcol,
-                            int ntasks,     // number of tasks
-                            int maxnumdmat,
-                            int symm,       // 0 non symmetric, others symmetric                            
+                            int ntasks,     // number of tasks                      
                             double tolscr,  // screening threshold
                             double offload_fraction,
                             PFock_t *pfock );
@@ -45,9 +43,7 @@ PFockStatus_t PFock_create( BasisSet_t basis,
 PFockStatus_t PFock_create( BasisSet_t basis,
                             int nprow,      // process topology is nprow by npcol
                             int npcol,
-                            int ntasks,     // number of tasks
-                            int maxnumdmat,
-                            int symm,       // 0 non symmetric, others symmetric                            
+                            int ntasks,     // number of tasks                          
                             double tolscr,  // screening threshold
                             PFock_t *pfock );
 #endif
@@ -57,8 +53,7 @@ PFockStatus_t PFock_destroy( PFock_t pfock );
 PFockStatus_t PFock_setNumDenMat( PFock_t pfock,
                                   int numdmat );
 
-PFockStatus_t PFock_putDenMat( PFock_t pfock,
-                               int index, // 0 to num-1, index of density matrix    
+PFockStatus_t PFock_putDenMat( PFock_t pfock,  
                                int rowstart,
                                int rowend,
                                int colstart,
@@ -67,7 +62,6 @@ PFockStatus_t PFock_putDenMat( PFock_t pfock,
                                int stride );
 
 PFockStatus_t PFock_fillDenMat( PFock_t pfock,
-                                int index, // 0 to num-1, index of density matrix
                                 double value );
 
 // called loosely synchronously by all processes
@@ -75,7 +69,6 @@ PFockStatus_t PFock_fillDenMat( PFock_t pfock,
 PFockStatus_t PFock_commitDenMats( PFock_t pfock );
 
 PFockStatus_t PFock_getMat( PFock_t pfock,
-                            int index,
                             PFockMatType_t type,
                             int rowstart,
                             int rowend,
@@ -92,7 +85,6 @@ PFockStatus_t PFock_getLocalMatInds( PFock_t pfock,
                                      int *colend );
 
 PFockStatus_t PFock_getLocalMatPtr ( PFock_t pfock,
-                                     int index,
                                      PFockMatType_t type,
                                      int *rowstart,
                                      int *rowend,
@@ -102,7 +94,6 @@ PFockStatus_t PFock_getLocalMatPtr ( PFock_t pfock,
                                      int *stride );
 
 PFockStatus_t PFock_getMatGAHandle( PFock_t pfock,
-                                    int index,
                                     PFockMatType_t type,
                                     int *ga );
 

@@ -89,5 +89,8 @@ int compute_purification (purif_t * purif, double *F_block, double *D_block);
 void compute_diis (PFock_t pfock, purif_t * purif,
                    double *D_block, double *F_block, int iter);
 
+void compute_eigensolve(int ga_tmp, purif_t * purif,
+                        double *F_block, int nprow, int npcol);
+
 
 #endif /* __PURIF_H__ */

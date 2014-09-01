@@ -707,8 +707,6 @@ PFockStatus_t PFock_create (BasisSet_t basis,
                             int nprow,
                             int npcol,
                             int ntasks,
-                            int maxnumdmat,
-                            int symm,
                             double tolscr,
                             double offload_fraction,
                             PFock_t *_pfock)
@@ -717,8 +715,6 @@ PFockStatus_t PFock_create (BasisSet_t basis,
                             int nprow,
                             int npcol,
                             int ntasks,
-                            int maxnumdmat,
-                            int symm,
                             double tolscr,
                             PFock_t *_pfock)
 #endif
@@ -733,14 +729,6 @@ PFockStatus_t PFock_create (BasisSet_t basis,
     MPI_Comm_size (MPI_COMM_WORLD, &nprocs);         
     MPI_Comm_rank (MPI_COMM_WORLD, &myrank);
 
-#ifdef __INTEL_OFFLOAD
-    if (maxnumdmat > 1)
-    {
-        PFOCK_PRINTF (1, "offload mode only supports one density matrix\n");
-        return PFOCK_STATUS_INVALID_VALUE;
-    }
-#endif
-
     // ALIGN_MALLOC pfock
     pfock = (PFock_t)ALIGN_MALLOC (sizeof(struct PFock), 64);    
     if (NULL == pfock)
@@ -754,8 +742,7 @@ PFockStatus_t PFock_create (BasisSet_t basis,
     pfock->maxnfuncs = CInt_getMaxShellDim (basis);
     pfock->nbf = CInt_getNumFuncs (basis);
     pfock->nshells = CInt_getNumShells (basis);
-    pfock->natoms = CInt_getNumAtoms (basis);    
-    pfock->maxnumdmat = maxnumdmat;
+    pfock->natoms = CInt_getNumAtoms (basis);
     pfock->nthreads = omp_get_max_threads ();
     pfock->mem_cpu = 0.0;
     pfock->mem_mic = 0.0;
@@ -1079,7 +1066,6 @@ PFockStatus_t PFock_destroy (PFock_t pfock)
 
 
 PFockStatus_t PFock_putDenMat( PFock_t pfock,
-                               int index,
                                int rowstart,
                                int rowend,
                                int colstart,
@@ -1107,7 +1093,6 @@ PFockStatus_t PFock_putDenMat( PFock_t pfock,
 
 
 PFockStatus_t PFock_fillDenMat( PFock_t pfock,
-                                int index,
                                 double value )
 {
     if (pfock->committed == 1)
@@ -1115,13 +1100,6 @@ PFockStatus_t PFock_fillDenMat( PFock_t pfock,
         PFOCK_PRINTF (1, "can't change density matrix"
                          "after PFock_commitDenMats().\n");
         return PFOCK_STATUS_EXECUTION_FAILED;
-    }
-    
-    if (index < 0 ||
-        index >= pfock->numdmat)
-    {
-        PFOCK_PRINTF (1, "invalid index\n");
-        return PFOCK_STATUS_INVALID_VALUE;
     }
     
     GA_Fill (pfock->ga_D, &value);
@@ -1139,7 +1117,6 @@ PFockStatus_t PFock_commitDenMats (PFock_t pfock)
 
 
 PFockStatus_t PFock_getMat( PFock_t pfock,
-                            int index,
                             PFockMatType_t type,
                             int rowstart,
                             int rowend,
@@ -1176,8 +1153,7 @@ PFockStatus_t PFock_getLocalMatInds( PFock_t pfock,
 
     
     MPI_Comm_rank (MPI_COMM_WORLD, &myrank);
-    NGA_Distribution (pfock->ga_D[0], myrank, lo, hi);
-
+    NGA_Distribution (pfock->ga_D, myrank, lo, hi);
     *rowstart = lo[0];
     *rowend = hi[0];
     *colstart = lo[1];
@@ -1188,7 +1164,6 @@ PFockStatus_t PFock_getLocalMatInds( PFock_t pfock,
 
 
 PFockStatus_t PFock_getLocalMatPtr ( PFock_t pfock,
-                                     int index,
                                      PFockMatType_t type,
                                      int *rowstart,
                                      int *rowend,
@@ -1202,15 +1177,9 @@ PFockStatus_t PFock_getLocalMatPtr ( PFock_t pfock,
     int myrank;
     int ga;
 
-    if (index < 0 ||
-        index >= pfock->maxnumdmat)
-    {
-        PFOCK_PRINTF (1, "invalid index\n");
-        return PFOCK_STATUS_INVALID_VALUE;
-    }
     ga = pfock->gatable[type];
     MPI_Comm_rank (MPI_COMM_WORLD, &myrank);
-    NGA_Distribution (ga[index], myrank, lo, hi);
+    NGA_Distribution (ga, myrank, lo, hi);
     NGA_Access (ga, lo, hi, mat, stride);
     *rowstart = lo[0];
     *rowend = hi[0];
@@ -1222,7 +1191,6 @@ PFockStatus_t PFock_getLocalMatPtr ( PFock_t pfock,
 
 
 PFockStatus_t PFock_getMatGAHandle( PFock_t pfock,
-                                    int index,
                                     PFockMatType_t type,
                                     int *ga )
 {
@@ -1960,7 +1928,7 @@ PFockStatus_t PFock_GAInit( int nbf,
     
     maxrowsize = (nbf + nprow - 1)/nprow;
     maxcolsize = (nbf + npcol - 1)/npcol;    
-    heap = numdenmat * 5 * maxrowsize * maxcolsize * sizeof(double);
+    heap = numdenmat * 5 * maxrowsize * maxcolsize;
     stack = heap;
     heap += sizeheap;
     stack += sizestack;

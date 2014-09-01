@@ -702,3 +702,28 @@ void compute_diis (PFock_t pfock, purif_t * purif,
 
     MPI_Barrier (MPI_COMM_WORLD);
 }
+
+
+void compute_eigensolve(int ga_tmp, purif_t * purif,
+                        double *F_block, int nprow, int npcol)
+{
+    int nbf = purif->nbf;
+    if (purif->runpurif == 1)
+    {
+        int lo[2];
+        int hi[2];
+        int ld;
+        lo[0] = purif->srow_purif;
+        hi[0] = purif->srow_purif + purif->nrows_purif - 1;
+        lo[1] = purif->scol_purif;
+        hi[1] = purif->scol_purif + purif->ncols_purif - 1;
+        ld = purif->ldx;
+        NGA_Put(ga_tmp, lo, hi, F_block, &ld);
+    }
+
+    double *eval = (double *)mkl_malloc(nbf * sizeof (double), 64);
+    assert(eval != NULL);
+    my_peig(ga_tmp, ga_tmp, nbf, nprow, npcol, eval);
+
+    mkl_free(eval);
+}

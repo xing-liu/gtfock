@@ -446,9 +446,16 @@ int main (int argc, char **argv)
     #endif
     
         // purification
-        t1 = MPI_Wtime ();
-        int it = compute_purification (purif, purif->F_block, purif->D_block);
-        t2 = MPI_Wtime ();
+        MPI_Barrier(MPI_COMM_WORLD);
+        t1 = MPI_Wtime();
+        int it = compute_purification(purif, purif->F_block, purif->D_block);
+        t2 = MPI_Wtime();
+        MPI_Barrier(MPI_COMM_WORLD);
+
+        int ga_tmp;
+        PFock_getMatGAHandle(pfock, PFOCK_MAT_TYPE_D, &ga_tmp);
+        compute_eigensolve(ga_tmp, purif, purif->F_block,
+                           nprow_fock, npcol_fock);
 
         if (myrank == 0)
         {
