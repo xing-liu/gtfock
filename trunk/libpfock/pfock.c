@@ -214,11 +214,11 @@ static int nnz_partition (int m, int nnz, int min_nrows,
 
 static PFockStatus_t repartition_fock (PFock_t pfock)
 {
-    const int nshells = pfock->nshells;
-    const int nnz = pfock->nnz;
-    const int nbp_p = pfock->nbp_p;
-    const int nprow = pfock->nprow;
-    const int npcol = pfock->npcol;
+    int nshells = pfock->nshells;
+    int nnz = pfock->nnz;
+    int nbp_p = pfock->nbp_p;
+    int nprow = pfock->nprow;
+    int npcol = pfock->npcol;
     int *shellptr = pfock->shellptr;
     int myrank;
     int ret;
@@ -620,7 +620,7 @@ static PFockStatus_t create_buffers (PFock_t pfock)
     }
     // F buf
     nthreads = pfock->nthreads;
-    const char *ncpu_str = getenv ("nCPU_F");
+    char *ncpu_str = getenv ("nCPU_F");
     int ncpu_f;
     if (ncpu_str == NULL)
     {

@@ -61,7 +61,7 @@ int main (int argc, char **argv)
     int provided;
     MPI_Init_thread (&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
 
-    const int nthreads = omp_get_max_threads ();
+    int nthreads = omp_get_max_threads ();
     omp_set_num_threads (nthreads);
 
     char *offload_str = getenv ("GTFOCK_OFFLOAD");

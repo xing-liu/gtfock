@@ -193,16 +193,35 @@ void my_peig (int ga_A, int ga_B, int n, int nprow, int npcol, double *eval)
     work = (double *) mkl_malloc (2 * sizeof (double), 64);
     assert (work != NULL);
     lwork = -1;
+#if 0
     pdsyev ("V", "U", &n, A, &ione, &ione, descA,
             eval, Z, &ione, &ione, descZ, work, &lwork, &info);
+#else
+    int liwork = -1;
+    int *iwork = (int *)mkl_malloc(2 * sizeof (int), 64);
+    assert(iwork != NULL);
+    pdsyevd("V", "U", &n, A, &ione, &ione, descA,
+            eval, Z, &ione, &ione, descZ,
+            work, &lwork, iwork, &liwork, &info);    
+#endif
 
     // compute eigenvalues and eigenvectors
-    lwork = (int) work[0];
-    mkl_free (work);
-    work = (double *) mkl_malloc (lwork * sizeof (double), 64);
-    assert (work != NULL);
+    lwork = (int)work[0] * 2;
+    mkl_free(work);
+    work = (double *)mkl_malloc(lwork * sizeof (double), 64);
+    assert(work != NULL);
+#if 0
     pdsyev ("V", "U", &n, A, &ione, &ione, descA,
             eval, Z, &ione, &ione, descZ, work, &lwork, &info);
+#else
+    liwork = (int)iwork[0];
+    mkl_free(iwork);
+    iwork = (int *)mkl_malloc(liwork * sizeof (int), 64);
+    assert(iwork != NULL);
+    pdsyevd("V", "U", &n, A, &ione, &ione, descA,
+            eval, Z, &ione, &ione, descZ,
+            work, &lwork, iwork, &liwork, &info); 
+#endif
 
     double t2 = MPI_Wtime ();
     if (myrank == 0)
@@ -338,7 +357,7 @@ void init_oedmat (BasisSet_t basis, PFock_t pfock, purif_t * purif, int nprow,
      *       Second, it makes contiguous memory access in the double loops trivial. */
 
     /* Jeff: I try to remove all indirection when I want the compiler to do SIMD. */
-    const int lo1tmp = lo[1];
+    int lo1tmp = lo[1];
 
     double *lambda_vector = malloc (nfuncs_col * sizeof (double));
     assert (lambda_vector != NULL);

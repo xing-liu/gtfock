@@ -34,7 +34,7 @@ static inline void atomic_add_f64(volatile double* global_value, const double ad
 {
     uint64_t expected_value, new_value;
     do {
-        const double old_value = *global_value;
+        double old_value = *global_value;
         expected_value = _castf64_u64(old_value);
         new_value = _castf64_u64(old_value + addend);
     } while (!__sync_bool_compare_and_swap((volatile uint64_t*)global_value, expected_value, new_value));
@@ -209,12 +209,14 @@ void fock_task (BasisSet_t basis, ERD_t erd, int ncpu_f,
             int iXN = rowptr[i];
             int iMN = iX1M * ldX1+ iXN;
             int flag1 = (value1 < 0.0) ? 1 : 0;
+        #ifdef __TH2__    
             if (nt == 0)
             {
                 int flag;
                 MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG,
                            MPI_COMM_WORLD, &flag, MPI_STATUS_IGNORE);
             }
+        #endif    
             for (int j = startPQ; j < endPQ; j++)
             {
                 int P = shellrid[j];
@@ -466,13 +468,15 @@ static void compute_chunk (BasisSet_t basis, ERD_t erd,
         int iXN = rowptr[i];
         int iMN = iX1M * ldX1 + iXN;
         int flag1 = (value1 < 0.0) ? 1 : 0;
-    #ifndef __MIC__
+    #ifdef __TH2__
+      #ifndef __MIC__
         if (nt == 0)
         {
             int mpiflag;
             MPI_Iprobe (MPI_ANY_SOURCE, MPI_ANY_TAG,
                         MPI_COMM_WORLD, &mpiflag, MPI_STATUS_IGNORE);
         }
+      #endif
     #endif
         for (int j = startChunkPQ; j < endChunkPQ; j++)
         {
@@ -1011,7 +1015,7 @@ void offload_init (int nshells, int nnz,
         nthreads_mic = nthreads_mic > nt_mic ? nthreads_mic : nt_mic;
     }
     
-    const char *nmic_str = getenv ("nMIC_F");
+    char *nmic_str = getenv ("nMIC_F");
     int nmic_f;
     if (nmic_str == NULL)
     {

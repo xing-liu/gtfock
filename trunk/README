@@ -18,7 +18,7 @@ git checkout mpi3rma
 ./autogen.sh
 mkdir build
 cd build
-../configure CC=mpicc --prefix=$WORK_TOP/external-armci
+../configure CC=mpiicc --prefix=$WORK_TOP/external-armci
 make -j12
 make install
 
@@ -27,9 +27,8 @@ cd $WORK_TOP
 wget http://hpc.pnl.gov/globalarrays/download/ga-5-3.tgz
 tar xzf ga-5-3.tgz
 cd ga-5-3
-./configure CC=mpicc MPICC=mpicc CXX=mpicxx MPICXX=mpicxx \
-F77=mpif77 MPIF77=mpif77 FC=mpif90 MPIFC=mpif90\
-MPIEXEC="/opt/intel/impi/5.0.0.007.beta/bin64/mpiexec -np %NP%" NPROCS=4 \
+./configure CC=mpiicc MPICC=mpiicc CXX=mpiicpc MPICXX=mpiicpc \
+F77=mpiifort MPIF77=mpiifort FC=mpiifort MPIFC=mpiifort\
 --with-mpi --with-armci=$WORK_TOP/external-armci --prefix=$WORK_TOP/GAlib
 make -j12 install
 
@@ -44,8 +43,7 @@ python config_ga.py download openib
 C. Installing ERD libraries
 ===============================================================
 cd $WORK_TOP
-svn co https://github.com/Maratyszcza/OptErd
-cd OptErd/trunk/
+svn co https://github.com/Maratyszcza/OptErd/trunk OptErd
 make -j12
 prefix=$WORK_TOP/ERDlib make install
 

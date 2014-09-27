@@ -99,7 +99,7 @@ static void config_purif (purif_t * purif, int purif_offload)
     // create local arrays
     // purif->ldx = (ncols + ALIGNSIZE - 1)/ALIGNSIZE * ALIGNSIZE;
     purif->ldx = ncols;
-    meshsize = nrows * purif->ldx;
+    meshsize = nrows * ncols;
     purif->meshsize = meshsize;
     purif->X_block = (double *) mkl_malloc (meshsize * sizeof (double), 64);
     assert (purif->X_block != NULL);
@@ -287,9 +287,8 @@ int compute_purification (purif_t * purif, double *F_block, double *D_block)
     purif->timepass = 0.0;
     purif->timetr = 0.0;
 
-    if (purif->rundgemm == 1)
-    {
-        gettimeofday (&tv3, NULL);
+    if (purif->rundgemm == 1) {
+        gettimeofday(&tv3, NULL);
         // initialization
         int nrows = purif->nrows_purif;
         int ncols = purif->ncols_purif;
@@ -307,7 +306,6 @@ int compute_purification (purif_t * purif, double *F_block, double *D_block)
         MPI_Comm comm0 = purif->comm_purif;
         int nbf = purif->nbf;
         int nobtls = purif->nobtls;
-        int ldx = purif->ldx;
         double *X_block = purif->X_block;
         double *D2_block = purif->D2_block;
         double *D3_block = purif->D3_block;
@@ -321,129 +319,119 @@ int compute_purification (purif_t * purif, double *F_block, double *D_block)
         int mygrd = coords[2];
         tmpbuf_t tmpbuf = purif->tmpbuf;
         
-        if (purif->runpurif == 1)
-        {
+        if (purif->runpurif == 1) {
             // compute eigenvalue estimates using Gershgorin (F is symmetric)
             // offdF = sum(abs(F))' - abs(diag(F));
             // diagF = diag(F);
             // hmin = min(diagF - offdF);
             // hmax = max(diagF + offdF);
-            double _h[2 * ldx]; // offDF, diagF
-            double h[2 * ldx];  // hmin, hmax       
-            for (int i = 0; i < ncols; i++)
-            {
+            double _h[2 * ncols]; // offDF, diagF
+            double h[2 * ncols];  // hmin, hmax       
+            for (int i = 0; i < ncols; i++) {
                 _h[i] = 0.0;
-                _h[i + ldx] = 0.0;
-                for (int j = 0; j < nrows; j++)
-                {
-                    _h[i] += fabs (F_block[i + j * ldx]);
-                    if (j + startrow == i + startcol)
-                    {
-                        _h[i + ldx] = F_block[i + j * ldx];
+                _h[i + ncols] = 0.0;
+                for (int j = 0; j < nrows; j++) {
+                    _h[i] += fabs(F_block[i + j * ncols]);
+                    if (j + startrow == i + startcol) {
+                        _h[i + ncols] = F_block[i + j * ncols];
                     }
                 }
-                _h[i] = _h[i] - fabs (_h[i + ldx]);
-                double tmp = _h[i + ldx] + _h[i];
-                _h[i] = _h[i + ldx] - _h[i];
-                _h[i + ldx] = tmp;
+                _h[i] = _h[i] - fabs(_h[i + ncols]);
+                double tmp = _h[i + ncols] + _h[i];
+                _h[i] = _h[i + ncols] - _h[i];
+                _h[i + ncols] = tmp;
             }
-            MPI_Reduce (_h, h, 2 * ldx, MPI_DOUBLE, MPI_SUM, 0, comm_col);
+            MPI_Reduce(_h, h, 2 * ncols, MPI_DOUBLE, MPI_SUM, 0, comm_col);
 
             double _hmax;
             double _hmin;
             double hmax;
             double hmin;
-            if (myrow == 0)
-            {
+            if (myrow == 0) {
                 _hmin = DBL_MAX;
                 _hmax = -DBL_MAX;
-                for (int i = 0; i < ncols; i++)
-                {
+                for (int i = 0; i < ncols; i++) {
                     _hmin = h[i] > _hmin ? _hmin : h[i];
-                    _hmax = h[i + ldx] < _hmax ? _hmax : h[i + ldx];
+                    _hmax = h[i + ncols] < _hmax ? _hmax : h[i + ncols];
                 }
-                MPI_Reduce (&_hmin, &hmin, 1, MPI_DOUBLE, MPI_MIN, 0,
-                            comm_row);
-                MPI_Reduce (&_hmax, &hmax, 1, MPI_DOUBLE, MPI_MAX, 0,
-                            comm_row);
+                MPI_Reduce(&_hmin, &hmin, 1, MPI_DOUBLE, MPI_MIN, 0, comm_row);
+                MPI_Reduce(&_hmax, &hmax, 1, MPI_DOUBLE, MPI_MAX, 0, comm_row);
             }
-            MPI_Bcast (&hmin, 1, MPI_DOUBLE, 0, comm_purif);
-            MPI_Bcast (&hmax, 1, MPI_DOUBLE, 0, comm_purif);
+            MPI_Bcast(&hmin, 1, MPI_DOUBLE, 0, comm_purif);
+            MPI_Bcast(&hmax, 1, MPI_DOUBLE, 0, comm_purif);
             // define constants, dependent on F
             // in the following:
             // 5 = no of occupied orbitals
-            // 7 = no of spatial basis function (each corresponds to 2 electrons for RHF)
+            // 7 = no of spatial basis function
+            // (each corresponds to 2 electrons for RHF)
             // mu_bar = trace_dense_matrix(F)/7;
             double trF;
             double _trF;
             _trF = 0.0;
-            for (int i = 0; i < lentr; i++)
-            {
-                _trF += F_block[(i + starttrrow) * ldx + i + starttrcol];
+            for (int i = 0; i < lentr; i++) {
+                _trF += F_block[(i + starttrrow) * ncols + i + starttrcol];
             }
-            MPI_Allreduce (&_trF, &trF, 1, MPI_DOUBLE, MPI_SUM, comm_purif);
+            MPI_Allreduce(&_trF, &trF, 1, MPI_DOUBLE, MPI_SUM, comm_purif);
 
             double mu_bar = trF / (double) nbf;
             // lambda = min([ 5/(hmax - mu_bar), (7-5)/(mu_bar - hmin) ]);
-            double lambda = MIN ((double) nobtls / (hmax - mu_bar),
-                                 (double) (nbf - nobtls) / (mu_bar - hmin));
-            if (myrank == 0)
-            {
-                printf ("mu_bar = %le, lambda = %le, hmax = %le, hmin = %le, nobtls = %d\n",
-                    mu_bar, lambda, hmax, hmin, nobtls);
+            double lambda = MIN((double) nobtls / (hmax - mu_bar),
+                                (double) (nbf - nobtls) / (mu_bar - hmin));
+            if (myrank == 0) {
+                printf("mu_bar = %le, lambda = %le,"
+                       " hmax = %le, hmin = %le, nobtls = %d\n",
+                       mu_bar, lambda, hmax, hmin, nobtls);
             }
             
             // initial "guess" for density matrix
             // D = (lambda*mu_bar/7 + 5/7)*eye(7) - (lambda/7)*D;
-            for (int i = 0; i < nrows * ldx; i++)
-            {
+            for (int i = 0; i < nrows * ncols; i++) {
                 D_block[i] = F_block[i] * (-lambda / nbf);
             }
-            for (int i = 0; i < lentr; i++)
-            {
-                D_block[(i + starttrrow) * ldx + i + starttrcol] +=
+            for (int i = 0; i < lentr; i++) {
+                D_block[(i + starttrrow) * ncols + i + starttrcol] +=
                     lambda * mu_bar / (double) nbf + (double) nobtls / nbf;
             }
         } /* if (purif->runpurif == 1) */
 
         // McWeeny purification
         // convergence appears slow at first, before accelerating at end
-        for (it = 0; it < MAX_PURF_ITERS; it++)
-        {
-            gettimeofday (&tv1, NULL);
-            pdgemm3D (myrow, mycol, mygrd, comm_row, comm_col, comm_grd,
-                      comm0, nr, nc, nrows, ncols, D_block, D2_block,
-                      D3_block, &tmpbuf);
-            gettimeofday (&tv2, NULL);
+        for (it = 0; it < MAX_PURF_ITERS; it++) {
+            gettimeofday(&tv1, NULL);
+            pdgemm3D(myrow, mycol, mygrd, comm_row, comm_col, comm_grd,
+                     comm0, nr, nc, nrows, ncols, D_block, D2_block,
+                     D3_block, &tmpbuf);
+            gettimeofday(&tv2, NULL);
             purif->timedgemm += (tv2.tv_sec - tv1.tv_sec) +
                 (tv2.tv_usec - tv1.tv_usec) / 1000.0 / 1000.0;
 
-            gettimeofday (&tv1, NULL);
+            gettimeofday(&tv1, NULL);
 
             double errnorm;
-            if (purif->runpurif == 1)
-            {
+            if (purif->runpurif == 1) {
                 // stopping criterion
                 // errnorm = norm(D-D2, 'fro');
                 double _errnorm = 0.0;
                 #pragma omp parallel for reduction(+: _errnorm)
-                for (int i = 0; i < nrows * ncols; i++)
-                {  
+                for (int i = 0; i < nrows * ncols; i++) {  
                     _errnorm += (D_block[i] - D2_block[i]) *
                             (D_block[i] - D2_block[i]);
                 }
-                MPI_Reduce (&_errnorm, &errnorm, 1,
-                            MPI_DOUBLE, MPI_SUM, 0, comm_purif);
-                if (myrank == 0)
-                {
-                    errnorm = sqrt (errnorm);
+                MPI_Reduce(&_errnorm, &errnorm, 1,
+                           MPI_DOUBLE, MPI_SUM, 0, comm_purif);
+                if (myrank == 0) {
+                    errnorm = sqrt(errnorm);
                 }
 
-                // a cheaper stopping criterion may be to check the trace of D*D
-                // and stop when it is close to no. occupied orbitals (5 in this case)
+                // a cheaper stopping criterion may be to
+                // check the trace of D*D
+                // and stop when it is close to no. occupied orbitals
+                // (5 in this case)
                 // fprintf('trace D*D //f\n', trace(D*D);
-                // might be possible to "lag" the computation of c by one iteration
-                // so that the global communication for traces can be overlapped.
+                // might be possible to "lag" the computation
+                // of c by one iteration
+                // so that the global communication for
+                // traces can be overlapped.
                 // Note: c appears to converge to 0.5           
                 // c = trace(D2-D3) / trace(D-D2);
                 double c;
@@ -452,75 +440,65 @@ int compute_purification (purif_t * purif, double *F_block, double *D_block)
                 double tr;
                 double tr2;
                 #pragma omp parallel for reduction(+: _tr, _tr2)
-                for (int i = 0; i < lentr; i++)
-                {
-                    _tr +=
-                        D2_block[(i + starttrrow) * ldx + i + starttrcol] -
-                        D3_block[(i + starttrrow) * ldx + i + starttrcol];
-                    _tr2 +=
-                        D_block[(i + starttrrow) * ldx + i + starttrcol] -
-                        D2_block[(i + starttrrow) * ldx + i + starttrcol];
+                for (int i = 0; i < lentr; i++) {
+                    _tr += D2_block[(i + starttrrow) * ncols + i + starttrcol] -
+                        D3_block[(i + starttrrow) * ncols + i + starttrcol];
+                    _tr2 += D_block[(i + starttrrow) * ncols + i + starttrcol] -
+                        D2_block[(i + starttrrow) * ncols + i + starttrcol];
                 }
 
-                /* Jeff: This is the result of fusion of two Reduce and one Bcast
-                 *       calls that were used to determine tr and tr2, hence c. */
+                // Jeff: This is the result of fusion of
+                //       two Reduce and one Bcast
+                //       calls that were used to determine tr and tr2, hence c.
                 double itmp[2], otmp[2];
                 itmp[0] = _tr;
                 itmp[1] = _tr2;
-
-                MPI_Allreduce (itmp, otmp, 2, MPI_DOUBLE, MPI_SUM, comm_purif);
-
+                MPI_Allreduce(itmp, otmp, 2, MPI_DOUBLE, MPI_SUM, comm_purif);
                 tr = otmp[0];
                 tr2 = otmp[1];
                 c = tr / tr2;
-
-                if (c < 0.5)
-                {
+                if (c < 0.5) {
                     #pragma omp parallel for
-                    for (int i = 0; i < nrows * ncols; i++)
-                    {
+                    for (int i = 0; i < nrows * ncols; i++) {
                         // D = ((1-2*c)*D + (1+c)*D2 - D3) / (1-c);
                         D_block[i] = ((1.0 - 2.0 * c) * D_block[i] +
-                                 (1.0 + c) * D2_block[i] - D3_block[i]) / (1.0 - c);
+                            (1.0 + c) * D2_block[i] - D3_block[i]) / (1.0 - c);
                     }
-                }
-                else
-                {
+                } else {
                     #pragma omp parallel for
-                    for (int i = 0; i < nrows * ncols; i++)
-                    {
+                    for (int i = 0; i < nrows * ncols; i++) {
                         // D = ((1+c)*D2 - D3) / c;
-                        D_block[i] = ((1.0 + c) * D2_block[i] - D3_block[i]) / c;
+                        D_block[i] =
+                            ((1.0 + c) * D2_block[i] - D3_block[i]) / c;
                     }
                 }
                 
             }          
-            MPI_Bcast (&errnorm, 1, MPI_DOUBLE, 0, comm0);
-            if (errnorm < 1e-11)
-            {
+            MPI_Bcast(&errnorm, 1, MPI_DOUBLE, 0, comm0);
+            if (errnorm < 1e-11) {
                 break;
             }
-            gettimeofday (&tv2, NULL);
+            gettimeofday(&tv2, NULL);
             purif->timetr += (tv2.tv_sec - tv1.tv_sec) +
                 (tv2.tv_usec - tv1.tv_usec) / 1000.0 / 1000.0;
         }
 
-        gettimeofday (&tv1, NULL);
-        pdgemm3D_2 (myrow, mycol, mygrd, comm_row, comm_col, comm_grd,
-                    comm0, nr, nc, nrows, ncols,
-                    X_block, D_block, workm, &tmpbuf);
-        pdgemm3D_2 (myrow, mycol, mygrd, comm_row, comm_col, comm_grd,
-                    comm0, nr, nc, nrows, ncols,
-                    workm, X_block, D_block, &tmpbuf);
-        gettimeofday (&tv2, NULL);
+        gettimeofday(&tv1, NULL);
+        pdgemm3D_2(myrow, mycol, mygrd, comm_row, comm_col, comm_grd,
+                   comm0, nr, nc, nrows, ncols,
+                   X_block, D_block, workm, &tmpbuf);
+        pdgemm3D_2(myrow, mycol, mygrd, comm_row, comm_col, comm_grd,
+                   comm0, nr, nc, nrows, ncols,
+                   workm, X_block, D_block, &tmpbuf);
+        gettimeofday(&tv2, NULL);
         purif->timedgemm += (tv2.tv_sec - tv1.tv_sec) +
             (tv2.tv_usec - tv1.tv_usec) / 1000.0 / 1000.0;
 
-        gettimeofday (&tv4, NULL);
+        gettimeofday(&tv4, NULL);
         purif->timepass += (tv4.tv_sec - tv3.tv_sec) +
             (tv4.tv_usec - tv3.tv_usec) / 1000.0 / 1000.0;
     }
-    MPI_Barrier (MPI_COMM_WORLD);
+    MPI_Barrier(MPI_COMM_WORLD);
 
     return it;
 }
@@ -529,25 +507,19 @@ int compute_purification (purif_t * purif, double *F_block, double *D_block)
 void compute_diis (PFock_t pfock, purif_t * purif,
                    double *D_block, double *F_block, int iter)
 {
-    const int nrows = purif->nrows_purif;
-    const int ncols = purif->ncols_purif;
-    const int meshsize = purif->meshsize;
-    const int ldx = purif->ldx;
+    int nrows = purif->nrows_purif;
+    int ncols = purif->ncols_purif;
+    int meshsize = purif->meshsize;
     double *X_block = purif->X_block;
     double *S_block = purif->S_block;
     double *workm = purif->D2_block;
     double *b_mat = purif->b_mat;
-    int cur_idx;
-    double *cur_F;
-    double *cur_diis;
+
     double *F_vecs = purif->F_vecs;
     double *diis_vecs = purif->diis_vecs;
     int *nr = purif->nr_purif;
     int *nc = purif->nc_purif;
     int myrank;
-    int myrow;
-    int mycol;
-    int mygrd;
     MPI_Comm comm_row = purif->comm_purif_row;
     MPI_Comm comm_col = purif->comm_purif_col;
     MPI_Comm comm_grd = purif->comm_purif_grd;
@@ -555,144 +527,125 @@ void compute_diis (PFock_t pfock, purif_t * purif,
     MPI_Comm comm0 = purif->comm_purif;
     tmpbuf_t tmpbuf = purif->tmpbuf;
 
-    if (purif->rundgemm == 1)
-    {    
+    if (purif->rundgemm == 1) {    
         int coords[3];
         MPI_Comm_rank (purif->comm_purif, &myrank);
         MPI_Cart_coords (purif->comm_purif, myrank, 3, coords);
-        myrow = coords[0];
-        mycol = coords[1];
-        mygrd = coords[2];
-
-        cur_F = F_block;
-        if (iter > 1)
-        {
-            if (purif->len_diis < MAX_DIIS)
-            {
+        int myrow = coords[0];
+        int mycol = coords[1];
+        int mygrd = coords[2];
+        double *cur_F = F_block;
+        int cur_idx;
+        double *cur_diis;    
+        if (iter > 1) {
+            if (purif->len_diis < MAX_DIIS) {
                 cur_idx = purif->len_diis;
                 cur_diis = &(diis_vecs[cur_idx * meshsize]);
                 cur_F = &(F_vecs[cur_idx * meshsize]);
                 purif->len_diis++;
-            }
-            else
-            {
+            } else {
                 cur_idx = purif->bmax_id;
                 cur_diis = &(diis_vecs[cur_idx * meshsize]);
                 cur_F = &(F_vecs[cur_idx * meshsize]);
             }
             // Ctator = X*(F*D*S - S*D*F)*X;
-            pdgemm3D_2 (myrow, mycol, mygrd, comm_row, comm_col, comm_grd,
-                        comm0, nr, nc, nrows, ncols,
-                        F_block, D_block, workm, &tmpbuf);
-            pdgemm3D_2 (myrow, mycol, mygrd, comm_row, comm_col, comm_grd,
-                        comm0, nr, nc, nrows, ncols,
-                        workm, S_block, cur_diis, &tmpbuf);
-            if (purif->runpurif == 1)
-            {
+            pdgemm3D_2(myrow, mycol, mygrd, comm_row, comm_col, comm_grd,
+                       comm0, nr, nc, nrows, ncols,
+                       F_block, D_block, workm, &tmpbuf);
+            pdgemm3D_2(myrow, mycol, mygrd, comm_row, comm_col, comm_grd,
+                       comm0, nr, nc, nrows, ncols,
+                       workm, S_block, cur_diis, &tmpbuf);
+            if (purif->runpurif == 1) {
                 int dest;
                 coords[0] = mycol;
                 coords[1] = myrow;
-                coords[2] = mygrd;
-                MPI_Cart_rank (purif->comm_purif, coords, &dest);
-                MPI_Sendrecv (cur_diis, nrows * ncols, MPI_DOUBLE, dest, MPI_ANY_TAG,
-                              workm, nrows * ncols, MPI_DOUBLE, dest, MPI_ANY_TAG,
-                              purif->comm_purif, MPI_STATUS_IGNORE);
+                coords[2] = mygrd;               
+                MPI_Cart_rank(purif->comm_purif, coords, &dest);
+                MPI_Sendrecv(cur_diis, nrows * ncols,
+                             MPI_DOUBLE, dest, dest,
+                             workm, nrows * ncols,
+                             MPI_DOUBLE, dest, MPI_ANY_TAG,
+                             purif->comm_purif, MPI_STATUS_IGNORE);
                 // F*D*S - (F*D*S)'       
-                for (int i = 0; i < nrows; i++)
-                {
-                    for (int j = 0; j < ncols; j++)
-                    {
-                        cur_diis[i * ldx + j] -= workm[j * ldx + i];
+                for (int i = 0; i < nrows; i++) {
+                    for (int j = 0; j < ncols; j++) {
+                        cur_diis[i * ncols + j] -= workm[j * nrows + i];
                     }
                 }
             }
-            pdgemm3D_2 (myrow, mycol, mygrd, comm_row, comm_col, comm_grd,
-                        comm0, nr, nc, nrows, ncols, X_block, cur_diis,
-                        workm, &tmpbuf);
-            pdgemm3D_2 (myrow, mycol, mygrd, comm_row, comm_col, comm_grd,
-                        comm0, nr, nc, nrows, ncols, workm, X_block,
-                        cur_diis, &tmpbuf);
-            if (purif->runpurif == 1)
-            {
+            pdgemm3D_2(myrow, mycol, mygrd, comm_row, comm_col, comm_grd,
+                       comm0, nr, nc, nrows, ncols, X_block, cur_diis,
+                       workm, &tmpbuf);
+            pdgemm3D_2(myrow, mycol, mygrd, comm_row, comm_col, comm_grd,
+                       comm0, nr, nc, nrows, ncols, workm, X_block,
+                       cur_diis, &tmpbuf);
+            if (purif->runpurif == 1) {
                 // b_mat(i,j) = dot(vecs(:,i), vecs(:,j));
                 double _dot[LDBMAT];
-                for (int i = 0; i < purif->len_diis; i++)
-                {
+                for (int i = 0; i < purif->len_diis; i++) {
                     double *diis2 = &(diis_vecs[i * meshsize]);
                     _dot[i] = 0.0;
-                    for (int j = 0; j < nrows; j++)
-                    {
-                        for (int k = 0; k < ncols; k++)
-                        {
+                    for (int j = 0; j < nrows; j++) {
+                        for (int k = 0; k < ncols; k++) {
                             _dot[i] +=
-                                cur_diis[j * ldx + k] * diis2[j * ldx + k];
+                                cur_diis[j * ncols + k] * diis2[j * ncols + k];
                         }
                     }
-                }               /* end for */
+                } /* end for */
                 // update b_mat on rank 0          
-                MPI_Reduce (_dot, &(b_mat[cur_idx * LDBMAT]),
-                            purif->len_diis, MPI_DOUBLE, MPI_SUM, 0,
-                            comm_purif);
-                if (myrank == 0)
-                {
-                    purif->bmax = DBL_MIN;
-                    for (int i = 0; i < purif->len_diis; i++)
-                    {
+                MPI_Reduce(_dot, &(b_mat[cur_idx * LDBMAT]),
+                           purif->len_diis, MPI_DOUBLE, MPI_SUM, 0, comm_purif);
+                if (myrank == 0) {
+                    purif->bmax = -DBL_MAX;
+                    for (int i = 0; i < purif->len_diis; i++) {
                         b_mat[i * LDBMAT + cur_idx] =
                             b_mat[cur_idx * LDBMAT + i];
-                        if (purif->bmax < b_mat[i * LDBMAT + i])
-                        {
+                        if (purif->bmax < b_mat[i * LDBMAT + i]) {
                             purif->bmax = b_mat[i * LDBMAT + i];
                             purif->bmax_id = i;
                         }
                     }
                 }
-            }                   /* if (purif->runpurif == 1) */
+            } /* if (purif->runpurif == 1) */
             MPI_Bcast (&(purif->bmax_id), 1, MPI_DOUBLE, 0, comm0);
-        }                       /* if (iter > 1) */
+        } /* if (iter > 1) */
 
         // F = X*F*X;
-        pdgemm3D_2 (myrow, mycol, mygrd, comm_row, comm_col, comm_grd,
-                    comm0, nr, nc, nrows, ncols,
-                    X_block, F_block, workm, &tmpbuf);
-        pdgemm3D_2 (myrow, mycol, mygrd, comm_row, comm_col, comm_grd,
-                    comm0, nr, nc, nrows, ncols, workm,
-                    X_block, cur_F, &tmpbuf);
+        pdgemm3D_2(myrow, mycol, mygrd, comm_row, comm_col, comm_grd,
+                   comm0, nr, nc, nrows, ncols,
+                   X_block, F_block, workm, &tmpbuf);
+        pdgemm3D_2(myrow, mycol, mygrd, comm_row, comm_col, comm_grd,
+                   comm0, nr, nc, nrows, ncols, workm,
+                   X_block, cur_F, &tmpbuf);
         // extrapolate
-        if (iter > 1)
-        {
-            if (purif->runpurif == 1)
-            {
+        if (iter > 1) {
+            if (purif->runpurif == 1) {
                 double coeffs[LDBMAT];
                 // rhs = zeros(m+1,1);
                 // rhs(m+1,1) = -1;
                 // coeffs = inv(b_mat) * rhs;
-                if (myrank == 0)
-                {
-                    const int sizeb = purif->len_diis + 1;
-                    __declspec (align (64)) double b_inv[LDBMAT * LDBMAT];
-                    __declspec (align (64)) int ipiv[LDBMAT];
-                    memcpy (b_inv, b_mat, LDBMAT * LDBMAT * sizeof (double));
-                    LAPACKE_dgetrf (LAPACK_ROW_MAJOR, sizeb, sizeb, b_inv,
-                                    LDBMAT, ipiv);
-                    LAPACKE_dgetri (LAPACK_ROW_MAJOR, sizeb, b_inv, LDBMAT,
-                                    ipiv);
-                    for (int i = 0; i < sizeb; i++)
-                    {
+                if (myrank == 0) {
+                    int sizeb = purif->len_diis + 1;
+                    __declspec(align (64)) double b_inv[LDBMAT * LDBMAT];
+                    __declspec(align (64)) int ipiv[LDBMAT];
+                    memcpy(b_inv, b_mat, LDBMAT * LDBMAT * sizeof (double));
+                    LAPACKE_dgetrf(LAPACK_ROW_MAJOR, sizeb, sizeb, b_inv,
+                                   LDBMAT, ipiv);
+                    LAPACKE_dgetri(LAPACK_ROW_MAJOR, sizeb, b_inv, LDBMAT,
+                                   ipiv);
+                    for (int i = 0; i < sizeb; i++) {
                         coeffs[i] = -b_inv[i * LDBMAT + sizeb - 1];
                     }
                 }
-                MPI_Bcast (coeffs, purif->len_diis, MPI_DOUBLE, 0, comm_purif);
+                MPI_Bcast(coeffs, purif->len_diis, MPI_DOUBLE, 0, comm_purif);
 
                 // F = 0
                 // for j = 1:m
                 //     F = F + coeffs(j)* F_vecs(j);
-                memset (F_block, 0, sizeof (double) * meshsize);
-                for (int i = 0; i < purif->len_diis; i++)
-                {
+                memset(F_block, 0, sizeof (double) * meshsize);
+                for (int i = 0; i < purif->len_diis; i++) {
                     double *F_vec = &(F_vecs[i * meshsize]);
-                    for (int j = 0; j < meshsize; j++)
-                    {
+                    for (int j = 0; j < meshsize; j++) {
                         F_block[j] += coeffs[i] * F_vec[j];
                     }
                 }
@@ -700,7 +653,7 @@ void compute_diis (PFock_t pfock, purif_t * purif,
         }
     } /* if (purif->rundgemm == 1) */
 
-    MPI_Barrier (MPI_COMM_WORLD);
+    MPI_Barrier(MPI_COMM_WORLD);
 }
 
 

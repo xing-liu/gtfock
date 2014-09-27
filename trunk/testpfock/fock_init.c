@@ -21,7 +21,7 @@ void screening (BasisSet_t basis, int **shellptrOut,
     nthreads = omp_get_max_threads ();
     ERD_t erd;
     CInt_createERD (basis, &erd, nthreads);
-    const int nshells = CInt_getNumShells (basis);
+    int nshells = CInt_getNumShells (basis);
 
     double *vpairs = (double *) malloc (sizeof (double) * nshells * nshells);
     assert (vpairs != NULL);
@@ -33,10 +33,10 @@ void screening (BasisSet_t basis, int **shellptrOut,
         #pragma omp for reduction(max:allmax)
         for (int M = 0; M < nshells; M++)
         {
-            const int dimM = CInt_getShellDim (basis, M);
+            int dimM = CInt_getShellDim (basis, M);
             for (int N = 0; N < nshells; N++)
             {
-                const int dimN = CInt_getShellDim (basis, N);
+                int dimN = CInt_getShellDim (basis, N);
                 int nints;
                 double *integrals;
 
@@ -49,7 +49,7 @@ void screening (BasisSet_t basis, int **shellptrOut,
                     {
                         for (int iN = 0; iN < dimN; iN++)
                         {
-                            const int index =
+                            int index =
                                 iM * (dimN * dimM * dimN + dimN) +
                                 iN * (dimM * dimN + 1);
                             if (mvalue < fabs (integrals[index]))
@@ -70,7 +70,7 @@ void screening (BasisSet_t basis, int **shellptrOut,
 
     // init shellptr
     int nnz = 0;
-    const double eta = TOLSRC * TOLSRC / allmax;
+    double eta = TOLSRC * TOLSRC / allmax;
     int *shellptr = (int *) _mm_malloc (sizeof (int) * (nshells + 1), 64);
     assert (shellptr != NULL);
     memset (shellptr, 0, sizeof (int) * (nshells + 1));
@@ -103,7 +103,7 @@ void screening (BasisSet_t basis, int **shellptrOut,
     {
         for (int N = 0; N < nshells; N++)
         {
-            const double mvalue = vpairs[M * nshells + N];
+            double mvalue = vpairs[M * nshells + N];
             if (mvalue > eta)
             {
                 if (M > N && (M + N) % 2 == 1 || M < N && (M + N) % 2 == 0)

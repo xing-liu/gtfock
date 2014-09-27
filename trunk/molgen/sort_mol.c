@@ -29,7 +29,7 @@ static void atom_screening (BasisSet_t basis, int **atomptrOut,
     nthreads = omp_get_max_threads ();
     ERD_t erd;
     CInt_createERD (basis, &erd, nthreads);
-    const int natoms = CInt_getNumAtoms (basis);
+    int natoms = CInt_getNumAtoms (basis);
 
     double *vpairs = (double *) malloc (sizeof (double) * natoms * natoms);
     assert (vpairs != NULL);
@@ -41,21 +41,21 @@ static void atom_screening (BasisSet_t basis, int **atomptrOut,
         #pragma omp for reduction(max:allmax)
         for (int i = 0; i < natoms; i++)
         {
-            const int start_sh0 = CInt_getAtomStartInd (basis, i);
-            const int end_sh0 = CInt_getAtomStartInd (basis, i + 1);
+            int start_sh0 = CInt_getAtomStartInd (basis, i);
+            int end_sh0 = CInt_getAtomStartInd (basis, i + 1);
             double mvalue;
             int j;
             for (int M = start_sh0; M < end_sh0; M++)
             {
-                const int dimM = CInt_getShellDim (basis, M);
+                int dimM = CInt_getShellDim (basis, M);
                 for (j = 0; j < natoms; j++)
                 {
-                    const int start_sh1 = CInt_getAtomStartInd (basis, j);
-                    const int end_sh1 = CInt_getAtomStartInd (basis, j + 1);
+                    int start_sh1 = CInt_getAtomStartInd (basis, j);
+                    int end_sh1 = CInt_getAtomStartInd (basis, j + 1);
                     mvalue = 0.0;
                     for (int N = start_sh1; N < end_sh1; N++)
                     {
-                        const int dimN = CInt_getShellDim (basis, N);
+                        int dimN = CInt_getShellDim (basis, N);
                         int nints;
                         double *integrals;
 
@@ -67,7 +67,7 @@ static void atom_screening (BasisSet_t basis, int **atomptrOut,
                             {
                                 for (int iN = 0; iN < dimN; iN++)
                                 {
-                                    const int index = iM * (dimN * dimM * dimN + dimN) +
+                                    int index = iM * (dimN * dimM * dimN + dimN) +
                                         iN * (dimM * dimN + 1);
                                     if (mvalue < fabs (integrals[index]))
                                     {
@@ -89,7 +89,7 @@ static void atom_screening (BasisSet_t basis, int **atomptrOut,
 
     // init atomptr
     int nnz = 0;
-    const double eta = TOLSRC * TOLSRC / allmax;
+    double eta = TOLSRC * TOLSRC / allmax;
     int *atomptr = (int *) _mm_malloc (sizeof (int) * (natoms + 1), 64);
     assert (atomptr != NULL);
     memset (atomptr, 0, sizeof (int) * (natoms + 1));
@@ -116,7 +116,7 @@ static void atom_screening (BasisSet_t basis, int **atomptrOut,
     {
         for (int j = 0; j < natoms; j++)
         {
-            const double mvalue = vpairs[i * natoms + j];
+            double mvalue = vpairs[i * natoms + j];
             if (mvalue > eta)
             {
                 atomvalue[nnz] = mvalue;                       
