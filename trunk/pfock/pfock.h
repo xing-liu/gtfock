@@ -3,7 +3,6 @@
 
 
 #include <omp.h>
-#include <ga.h>
 
 #include "CInt.h"
 
@@ -99,10 +98,10 @@ struct PFock {
     int sizeloadcol;
 
     // global arrays
-    int ga_F;
-    int ga_D;
-    int ga_K;
-    int gatable[4];
+    int *ga_F;
+    int *ga_D;
+    int *ga_K;
+    int *gatable[4];
     int ga_H;
     int ga_S;
     int ga_X;
@@ -126,9 +125,9 @@ struct PFock {
     int ldX4;
     int ldX5;
     int ldX6;
-    double *D1;
-    double *D2;
-    double *D3;
+    double **D1;
+    double **D2;
+    double **D3;
     double *F1;
     double *F2;
     double *F3;
@@ -137,17 +136,15 @@ struct PFock {
     double *F6;
     int numF;
     int ncpu_f;
-    int ga_D1;
-    int ga_D2;
-    int ga_D3;
-    int ga_F1;
-    int ga_F2;
-    int ga_F3;
-    int tosteal;
+    int *ga_D1;
+    int *ga_D2;
+    int *ga_D3;
+    int *ga_F1;
+    int *ga_F2;
+    int *ga_F3;
     
     // statistics
     double mem_cpu;
-    double mem_mic;
     double *mpi_timepass;
     double timepass;
     double *mpi_timereduce;
@@ -175,20 +172,6 @@ struct PFock {
 };
 
 
-struct Ovl
-{
-    int ga;
-};
-
-
-struct CoreH
-{
-    int ga;
-};
-
-
-typedef struct CoreH *CoreH_t;
-typedef struct Ovl *Ovl_t;    
 typedef struct PFock *PFock_t;
 
 
@@ -399,11 +382,7 @@ PFockStatus_t PFock_getOvlMat2(PFock_t pfock, int rowstart, int rowend,
                                int colstart, int colend,
                                int stride, double *mat);
 
-PFockStatus_t PFock_getMemorySize(PFock_t pfock,
-                                  double *mem_cpu,
-                                  double *mem_mic,
-                                  double *erd_mem_cpu,
-                                  double *erd_mem_mic);
+PFockStatus_t PFock_getMemorySize(PFock_t pfock, double *mem_cpu);
 
 PFockStatus_t PFock_getStatistics (PFock_t pfock);
 

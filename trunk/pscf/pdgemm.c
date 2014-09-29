@@ -8,7 +8,6 @@
 #include <mpi.h>
 
 #include "pdgemm.h"
-#include "mic_dgemm.h"
 
 
 #define P(mat,i,j,lda) ((mat)+(i)*(lda)+(j))
@@ -94,8 +93,8 @@ int pdgemm3D(int myrow, int mycol, int mygrd,
         MPI_Bcast(&A_i[0], nrows * ncols, MPI_DOUBLE, mygrd, comm_col);
 
         // 2.2. Do local dgemm
-        pcl_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans, ncols, ncols,
-                  ncols, 1.0, A, ncols, &A_i[0], ncols, 0.0, &S_i[0], ncols);
+        cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans, ncols, ncols,
+                    ncols, 1.0, A, ncols, &A_i[0], ncols, 0.0, &S_i[0], ncols);
 
         // 2.3. reduce S_i into a column i on plane i
         MPI_Reduce(&S_i[0], S, nrows * ncols, MPI_DOUBLE, MPI_SUM, mygrd,
@@ -127,8 +126,8 @@ int pdgemm3D(int myrow, int mycol, int mygrd,
         MPI_Bcast(&S_i[0], nrows * ncols, MPI_DOUBLE, mygrd, comm_col);
 
         // 3.3. C_i=A*S_i
-        pcl_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, ncols, ncols,
-                  ncols, 1.0, A, ncols, &S_i[0], ncols, 0.0, &C_i[0], ncols);
+        cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, ncols, ncols,
+                    ncols, 1.0, A, ncols, &S_i[0], ncols, 0.0, &C_i[0], ncols);
 
         // 3.4. Reduce C_i into a column on plane i
         MPI_Reduce(&C_i[0], C, nrows * ncols, MPI_DOUBLE, MPI_SUM, mygrd,

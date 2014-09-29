@@ -10,10 +10,8 @@
 #include <mkl.h>
 #include <mkl_trans.h>
 #include <sys/time.h>
-#include <ga.h>
 
 #include "pdgemm.h"
-#include "mic_dgemm.h"
 #include "purif.h"
 
 
@@ -143,17 +141,6 @@ static void config_purif (purif_t * purif, int purif_offload)
         purif->D2_block[i] = 0.0;
         purif->D3_block[i] = 0.0;
     }
- 
-    init_pcl_dgemm (MAX(nrows, ncols), purif_offload);
-
-    for(int iter = 0; iter < 3; iter++)
-    {
-        int nnn = MIN(nrows, ncols);
-        pcl_dgemm (CblasRowMajor, CblasNoTrans, CblasNoTrans,
-                   nnn, nnn, nnn, 1.0, purif->D_block, ncols,
-                   purif->D_block, ncols,
-                   0.0, purif->D2_block, ncols);
-    }
     allocate_tmpbuf (nrows, ncols, nr, nc, &(purif->tmpbuf));
     memsize = (2.0 * MAX_DIIS + 14.0) * meshsize * sizeof (double);
     if (myrow == 0 && mycol == 0 && mygrd == 0)
@@ -232,11 +219,7 @@ purif_t *create_purif(BasisSet_t basis, int nprow_purif,
         MPI_Cart_sub (purif->comm_purif, belongsG, &(purif->comm_purif_grd));
         MPI_Comm_split (purif->comm_purif, mygrd, myrow * npcol_purif + mycol,
                         &(purif->comm_purif_plane));
-    #ifdef __INTEL_OFFLOAD
-        config_purif (purif, purif_offload);
-    #else
         config_purif (purif, 0);
-    #endif
     }
     if (myrank == 0)
     {
@@ -250,7 +233,6 @@ void destroy_purif (purif_t * purif)
 {
     if (purif->rundgemm == 1)
     {
-        deinit_pcl_dgemm ();
         dealloc_tmpbuf (&(purif->tmpbuf));
         
         MPI_Comm_free (&(purif->comm_purif));
