@@ -25,9 +25,9 @@ SCALAPACK_INCDIR = /opt/intel/mkl/include/
 SCALAPACK_LIBDIR = /opt/intel/mkl/lib/intel64/ 
 SCALAPACK_LIBS   = -lmkl_scalapack_lp64 -lmkl_blacs_intelmpi_lp64
 
-MPI_LIBDIR = /opt/mpich2/lib/ 
+MPI_INCDIR = /opt/intel/impi_latest/include64/
+MPI_LIBDIR = /opt/intel/impi_latest/lib64/
 MPI_LIBS =
-MPI_INCDIR = /opt/mpich2/include
 
 GA_INCDIR = ${GA_TOP}/include
 GA_LIBDIR = ${GA_TOP}/lib

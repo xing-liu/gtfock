@@ -1120,6 +1120,13 @@ PFockStatus_t PFock_commitDenMats(PFock_t pfock)
 }
 
 
+PFockStatus_t PFock_sync(PFock_t pfock)
+{
+    GA_Sync();
+    return PFOCK_STATUS_SUCCESS;
+}
+
+
 PFockStatus_t PFock_getMat(PFock_t pfock, PFockMatType_t type, int index,
                            int rowstart, int rowend,
                            int colstart, int colend,

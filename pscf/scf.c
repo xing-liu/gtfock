@@ -39,11 +39,8 @@ static void initial_guess(PFock_t pfock, BasisSet_t basis, int ispurif,
     int myrank;
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
 
-    int ga;
-    double fzero = 0.0;
-    PFock_getMatGAHandle(pfock, PFOCK_MAT_TYPE_D, USE_D_ID, &ga);
-    GA_Fill(ga, &fzero);
-
+    PFock_fillDenMat(0.0, USE_D_ID, pfock);
+    
     // load initial guess, only process 0
     if (myrank == 0) {
         int num_atoms = CInt_getNumAtoms(basis);
@@ -56,7 +53,7 @@ static void initial_guess(PFock_t pfock, BasisSet_t basis, int ispurif,
             PFock_putDenMat(spos, epos, spos, epos, ld, guess, USE_D_ID, pfock);
         }
     }
-    NGA_Sync ();
+    PFock_sync(pfock);
 
     if (1 == ispurif) {
         PFock_getMat(pfock, PFOCK_MAT_TYPE_D, USE_D_ID,
