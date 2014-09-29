@@ -30,12 +30,12 @@ LDFLAGS = -L${MPI_LIBDIR}       \
 PFOCK_LIBS = ../install/libpfock.a
 
 LIBS = ${MPI_LIBS}       \
-       ${GA_LIBS}        \
-       ${ARMCI_LIBS}     \
-       ${BLAS_LIBS} \
+       ${BLAS_LIBS}      \
        ${SCALAPACK_LIBS} \
        ${PFOCK_LIBS}     \
        ${ERD_LIBS}       \
+       ${GA_LIBS}        \
+       ${ARMCI_LIBS}     \
        -lifcore -limf
 
 all: ${EXEC} 

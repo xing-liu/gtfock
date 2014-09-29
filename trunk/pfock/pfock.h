@@ -265,7 +265,6 @@ PFockStatus_t PFock_putDenMat(int rowstart, int rowend,
 PFockStatus_t PFock_fillDenMat(double value, int index,
                                PFock_t pfock);
 
-
 /**
  * @brief  Commit the change of the density matrices.
  *
@@ -275,6 +274,13 @@ PFockStatus_t PFock_fillDenMat(double value, int index,
  * @param[inout] pfock  the pointer to the PFock_t compute engine 
  */ 
 PFockStatus_t PFock_commitDenMats(PFock_t pfock);
+
+/**
+ * @brief  Sync all the global array operations.
+ *
+ * @param[inout] pfock  the pointer to the PFock_t compute engine 
+ */
+PFockStatus_t PFock_sync(PFock_t pfock);
 
 /**
  * @brief  Get the data from a specific global densitry matrix.
