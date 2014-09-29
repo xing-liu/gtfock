@@ -13,6 +13,9 @@ struct PFock {
     int nthreads;
     int max_numdmat;
     int num_dmat;
+    int max_numdmat2;
+    int num_dmat2;
+    int nosymm;
     
     // screening
     int nnz;
@@ -205,15 +208,16 @@ typedef enum
  *                         (process topology is nprow by npcol)
  * @param[in] npcol        the number of processes per column
  *                         (process topology is nprow by npcol)
- * @param[in] max_numdmat  the maximum number of density matrices  
  * @param[in] ntasks       the number of tasks
  *                         (ntasks x ntasks tasks per process)
  * @param[in] tolscr       the screening threshold
+ * @param[in] max_numdmat  the maximum number of density matrices
+ * @param[in] symm         whether the density matrices are symmetric or not  
  * @param[in] pfock        the pointer to the PFock_t compute engine returned
  */
-PFockStatus_t PFock_create(BasisSet_t basis, int nprow, int npcol,
-                           int max_numdmat, int ntasks,
-                           double tolscr, PFock_t *_pfock);
+PFockStatus_t PFock_create(BasisSet_t basis, int nprow, int npcol, int ntasks,
+                           double tolscr, int max_numdmat, int symm,
+                           PFock_t *_pfock);
 
 /** 
  * @brief  Destroy the PFock compute engine. 

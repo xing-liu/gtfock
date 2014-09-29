@@ -359,9 +359,9 @@ static PFockStatus_t create_GA (PFock_t pfock)
     block[0] = nprow;
     block[1] = npcol;
 
-    pfock->ga_D = (int *)PFOCK_MALLOC(sizeof(int) * pfock->max_numdmat);
-    pfock->ga_F = (int *)PFOCK_MALLOC(sizeof(int) * pfock->max_numdmat);
-    pfock->ga_K = (int *)PFOCK_MALLOC(sizeof(int) * pfock->max_numdmat);
+    pfock->ga_D = (int *)PFOCK_MALLOC(sizeof(int) * pfock->max_numdmat2);
+    pfock->ga_F = (int *)PFOCK_MALLOC(sizeof(int) * pfock->max_numdmat2);
+    pfock->ga_K = (int *)PFOCK_MALLOC(sizeof(int) * pfock->max_numdmat2);
     if (pfock->ga_D == NULL ||
         pfock->ga_F == NULL ||
         pfock->ga_K == NULL) {
@@ -376,7 +376,7 @@ static PFockStatus_t create_GA (PFock_t pfock)
         return PFOCK_STATUS_ALLOC_FAILED;
     }
     
-    for (int i = 0; i < pfock->max_numdmat; i++) {
+    for (int i = 0; i < pfock->max_numdmat2; i++) {
         if (i != 0) {                
             sprintf(str, "D_%d", i);
             pfock->ga_D[i] = GA_Duplicate(pfock->ga_D[0], str);
@@ -413,7 +413,7 @@ static PFockStatus_t create_GA (PFock_t pfock)
 
 static void destroy_GA(PFock_t pfock)
 {
-    for (int i = 0; i < pfock->max_numdmat; i++) {
+    for (int i = 0; i < pfock->max_numdmat2; i++) {
         GA_Destroy(pfock->ga_D[i]);        
         GA_Destroy(pfock->ga_F[i]);
         GA_Destroy(pfock->ga_K[i]);
@@ -449,14 +449,14 @@ static PFockStatus_t create_FD_GArrays (PFock_t pfock)
     map[pfock->nprocs] = 0;
     dims[0] = pfock->nprocs;
     dims[1] = sizeD1;
-    pfock->ga_D1 = (int *)PFOCK_MALLOC(sizeof(int) * pfock->max_numdmat);
+    pfock->ga_D1 = (int *)PFOCK_MALLOC(sizeof(int) * pfock->max_numdmat2);
     if (pfock->ga_D1 == NULL) {
         PFOCK_PRINTF(1, "memory allocation failed\n");
         return PFOCK_STATUS_ALLOC_FAILED;
     }
     sprintf(str, "D1_0");
     pfock->ga_D1[0] = NGA_Create_irreg(C_DBL, 2, dims, str, block, map);
-    for (int i = 0; i < pfock->max_numdmat; i++) {
+    for (int i = 0; i < pfock->max_numdmat2; i++) {
         if (i != 0) {
             sprintf(str, "D1_%d", i);
             pfock->ga_D1[i] = GA_Duplicate(pfock->ga_D1[0], str);
@@ -475,14 +475,14 @@ static PFockStatus_t create_FD_GArrays (PFock_t pfock)
     map[pfock->nprocs] = 0;
     dims[0] = pfock->nprocs;
     dims[1] = sizeD2;
-    pfock->ga_D2 = (int *)PFOCK_MALLOC(sizeof(int) * pfock->max_numdmat);
+    pfock->ga_D2 = (int *)PFOCK_MALLOC(sizeof(int) * pfock->max_numdmat2);
     if (pfock->ga_D2 == NULL) {
         PFOCK_PRINTF(1, "memory allocation failed\n");
         return PFOCK_STATUS_ALLOC_FAILED;
     }
     sprintf(str, "D2_0");
     pfock->ga_D2[0] = NGA_Create_irreg(C_DBL, 2, dims, str, block, map);
-    for (int i = 0; i < pfock->max_numdmat; i++) {
+    for (int i = 0; i < pfock->max_numdmat2; i++) {
         if (i != 0) {
             sprintf(str, "D2_%d", i);
             pfock->ga_D2[i] = GA_Duplicate(pfock->ga_D2[0], str);
@@ -501,14 +501,14 @@ static PFockStatus_t create_FD_GArrays (PFock_t pfock)
     map[pfock->nprocs] = 0;
     dims[0] = pfock->nprocs;
     dims[1] = sizeD3;
-    pfock->ga_D3 = (int *)PFOCK_MALLOC(sizeof(int) * pfock->max_numdmat);
+    pfock->ga_D3 = (int *)PFOCK_MALLOC(sizeof(int) * pfock->max_numdmat2);
     if (pfock->ga_D3 == NULL) {
         PFOCK_PRINTF(1, "memory allocation failed\n");
         return PFOCK_STATUS_ALLOC_FAILED;
     }
     sprintf(str, "D3_0");
     pfock->ga_D3[0] = NGA_Create_irreg(C_DBL, 2, dims, str, block, map);
-    for (int i = 0; i < pfock->max_numdmat; i++) {
+    for (int i = 0; i < pfock->max_numdmat2; i++) {
         if (i != 0) {
             sprintf(str, "D3_%d", i);
             pfock->ga_D3[i] = GA_Duplicate(pfock->ga_D3[0], str);
@@ -520,16 +520,16 @@ static PFockStatus_t create_FD_GArrays (PFock_t pfock)
     }
 
     // F1, F2, and F3
-    pfock->ga_F1 = (int *)PFOCK_MALLOC(sizeof(int) * pfock->max_numdmat);
-    pfock->ga_F2 = (int *)PFOCK_MALLOC(sizeof(int) * pfock->max_numdmat);
-    pfock->ga_F3 = (int *)PFOCK_MALLOC(sizeof(int) * pfock->max_numdmat);
+    pfock->ga_F1 = (int *)PFOCK_MALLOC(sizeof(int) * pfock->max_numdmat2);
+    pfock->ga_F2 = (int *)PFOCK_MALLOC(sizeof(int) * pfock->max_numdmat2);
+    pfock->ga_F3 = (int *)PFOCK_MALLOC(sizeof(int) * pfock->max_numdmat2);
     if (pfock->ga_F1 == NULL ||
         pfock->ga_F2 == NULL ||
         pfock->ga_F3 == NULL) {
         PFOCK_PRINTF(1, "memory allocation failed\n");
         return PFOCK_STATUS_ALLOC_FAILED;
     }
-    for (int i = 0; i < pfock->max_numdmat; i++) {
+    for (int i = 0; i < pfock->max_numdmat2; i++) {
         sprintf(str, "F1_%d", i);
         pfock->ga_F1[i] = GA_Duplicate(pfock->ga_D1[0], str);
         sprintf(str, "F2_%d", i);
@@ -652,16 +652,16 @@ static PFockStatus_t create_buffers (PFock_t pfock)
     }
     
     // D buf
-    pfock->D1 = (double **)PFOCK_MALLOC(sizeof(double *) * pfock->max_numdmat);
-    pfock->D2 = (double **)PFOCK_MALLOC(sizeof(double *) * pfock->max_numdmat); 
-    pfock->D3 = (double **)PFOCK_MALLOC(sizeof(double *) * pfock->max_numdmat);
+    pfock->D1 = (double **)PFOCK_MALLOC(sizeof(double *) * pfock->max_numdmat2);
+    pfock->D2 = (double **)PFOCK_MALLOC(sizeof(double *) * pfock->max_numdmat2); 
+    pfock->D3 = (double **)PFOCK_MALLOC(sizeof(double *) * pfock->max_numdmat2);
     if (NULL == pfock->D1 ||
         NULL == pfock->D2 ||
         NULL == pfock->D3) {
         PFOCK_PRINTF (1, "memory allocation failed\n");
         return PFOCK_STATUS_ALLOC_FAILED;
     }
-    for (int i = 0; i < pfock->max_numdmat; i++) {
+    for (int i = 0; i < pfock->max_numdmat2; i++) {
         pfock->D1[i] = (double *)PFOCK_MALLOC(sizeof(double) * sizeX1);
         pfock->D2[i] = (double *)PFOCK_MALLOC(sizeof(double) * sizeX2); 
         pfock->D3[i] = (double *)PFOCK_MALLOC(sizeof(double) * sizeX3);
@@ -699,20 +699,20 @@ static PFockStatus_t create_buffers (PFock_t pfock)
     // allocation
 
     pfock->F1 = (double *)PFOCK_MALLOC(sizeof(double) * sizeX1 *
-        numF * pfock->max_numdmat);
+        numF * pfock->max_numdmat2);
     pfock->F2 = (double *)PFOCK_MALLOC(sizeof(double) * sizeX2 *
-        numF * pfock->max_numdmat); 
+        numF * pfock->max_numdmat2); 
     pfock->F3 = (double *)PFOCK_MALLOC(sizeof(double) * sizeX3 *
-        pfock->max_numdmat);
+        pfock->max_numdmat2);
     pfock->F4 = (double *)PFOCK_MALLOC(sizeof(double) * sizeX4 *
-        numF * pfock->max_numdmat);
+        numF * pfock->max_numdmat2);
     pfock->F5 = (double *)PFOCK_MALLOC(sizeof(double) * sizeX5 *
-        numF * pfock->max_numdmat); 
+        numF * pfock->max_numdmat2); 
     pfock->F6 = (double *)PFOCK_MALLOC(sizeof(double) * sizeX6 *
-        numF * pfock->max_numdmat);
+        numF * pfock->max_numdmat2);
     pfock->mem_cpu += 1.0 * sizeof(double) *
         (((double)sizeX1 + sizeX2 + sizeX4 + sizeX5 + sizeX6) * 
-        numF + sizeX3) * pfock->max_numdmat;
+        numF + sizeX3) * pfock->max_numdmat2;
     if (NULL == pfock->F1 ||
         NULL == pfock->F2 ||
         NULL == pfock->F3 ||
@@ -735,7 +735,7 @@ static PFockStatus_t create_buffers (PFock_t pfock)
 
 static void destroy_buffers (PFock_t pfock)
 {
-    for (int i = 0; i < pfock->max_numdmat; i++) {
+    for (int i = 0; i < pfock->max_numdmat2; i++) {
         GA_Destroy(pfock->ga_D1[i]);
         GA_Destroy(pfock->ga_D2[i]);
         GA_Destroy(pfock->ga_D3[i]);
@@ -759,7 +759,7 @@ static void destroy_buffers (PFock_t pfock)
     PFOCK_FREE(pfock->rowsize);
     PFOCK_FREE(pfock->colsize);
 
-    for (int i = 0; i < pfock->max_numdmat; i++) {
+    for (int i = 0; i < pfock->max_numdmat2; i++) {
         PFOCK_FREE(pfock->D1[i]);
         PFOCK_FREE(pfock->D2[i]);
         PFOCK_FREE(pfock->D3[i]);
@@ -801,9 +801,9 @@ void finalize_GA(void)
 }
 
 
-PFockStatus_t PFock_create(BasisSet_t basis, int nprow, int npcol,
-                           int max_numdmat, int ntasks,
-                           double tolscr, PFock_t *_pfock)
+PFockStatus_t PFock_create(BasisSet_t basis, int nprow, int npcol, int ntasks,
+                           double tolscr, int max_numdmat, int symm,
+                           PFock_t *_pfock)
 {
     // allocate pfock
     PFock_t pfock = (PFock_t)PFOCK_MALLOC(sizeof(struct PFock));    
@@ -827,7 +827,8 @@ PFockStatus_t PFock_create(BasisSet_t basis, int nprow, int npcol,
     MPI_Comm_size(MPI_COMM_WORLD, &nprocs);         
     MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
 
-    // initialization   
+    // initialization
+    pfock->nosymm = (symm == 0 ? 1 : 0);
     pfock->maxnfuncs = CInt_getMaxShellDim (basis);
     pfock->nbf = CInt_getNumFuncs (basis);
     pfock->nshells = CInt_getNumShells (basis);
@@ -859,10 +860,11 @@ PFockStatus_t PFock_create(BasisSet_t basis, int nprow, int npcol,
         return PFOCK_STATUS_INVALID_VALUE;
     } else {
         pfock->max_numdmat = max_numdmat;
+        pfock->max_numdmat2 = (pfock->nosymm + 1) * max_numdmat;
     }
           
     // init global arrays
-    init_GA(pfock->nbf, nprow, npcol, max_numdmat, 0, 0);
+    init_GA(pfock->nbf, nprow, npcol, pfock->max_numdmat2, 0, 0);
         
     // set tasks
     int minnshells = (nprow > npcol ? nprow : npcol);
@@ -928,7 +930,7 @@ PFockStatus_t PFock_create(BasisSet_t basis, int nprow, int npcol,
     if (myrank == 0) {
         PFOCK_INFO("takes %.3lf secs\n", t2 - t1);
     }
-    
+
     // repartition
     if ((ret = repartition_fock(pfock)) != PFOCK_STATUS_SUCCESS) {
         return ret;
@@ -999,7 +1001,7 @@ PFockStatus_t PFock_create(BasisSet_t basis, int nprow, int npcol,
 
 
 PFockStatus_t PFock_destroy(PFock_t pfock)
-{   
+{
     PFOCK_FREE(pfock->blkrowptr_sh);
     PFOCK_FREE(pfock->blkcolptr_sh);
     PFOCK_FREE(pfock->rowptr_sh);
@@ -1012,8 +1014,7 @@ PFockStatus_t PFock_destroy(PFock_t pfock)
     PFOCK_FREE(pfock->f_startind);
     PFOCK_FREE(pfock->s_startind);
 
-    CInt_destroyERD(pfock->erd);
-       
+    CInt_destroyERD(pfock->erd);    
     clean_taskq(pfock);
     clean_screening(pfock);
     destroy_GA(pfock);
@@ -1033,7 +1034,7 @@ PFockStatus_t PFock_destroy(PFock_t pfock)
     PFOCK_FREE(pfock->mpi_volumega);
     
     PFOCK_FREE(pfock);
-    
+  
     return PFOCK_STATUS_SUCCESS;
 }
 
@@ -1049,7 +1050,9 @@ PFockStatus_t PFock_setNumDenMat(int numdmat, PFock_t pfock)
         PFOCK_PRINTF(1, "Invalid number of density matrices\n");
         return PFOCK_STATUS_INVALID_VALUE;
     }
+    int numdmat2 = numdmat * (pfock->nosymm + 1);
     pfock->num_dmat = numdmat;
+    pfock->num_dmat2 = numdmat2;
     
     return PFOCK_STATUS_EXECUTION_FAILED;
 }
@@ -1107,7 +1110,12 @@ PFockStatus_t PFock_commitDenMats(PFock_t pfock)
 {
     GA_Sync();
     pfock->committed = 1;
-    
+    if (pfock->nosymm == 1) {
+        for (int i = 0; i < pfock->num_dmat; i++) {
+            GA_Transpose(pfock->ga_D[i], pfock->ga_D[i + pfock->num_dmat]);
+        }
+    }
+
     return PFOCK_STATUS_SUCCESS;
 }
 
@@ -1141,7 +1149,7 @@ PFockStatus_t PFock_getMat(PFock_t pfock, PFockMatType_t type, int index,
     ga = pfock->gatable[type];
     NGA_Get(ga[index], lo, hi, mat, ld);
 
-#ifndef _SCF_  
+#ifndef _SCF_
     if (PFOCK_MAT_TYPE_F == type) {
         int sizerow = rowend - rowstart + 1;
         int sizecol = colend - colstart + 1;
@@ -1269,9 +1277,9 @@ PFockStatus_t PFock_computeFock(BasisSet_t basis,
     int sizeX4 = pfock->sizeX4;    
     int sizeX5 = pfock->sizeX5;
     int sizeX6 = pfock->sizeX6;
-    double *D1[pfock->num_dmat];
-    double *D2[pfock->num_dmat];
-    double *D3[pfock->num_dmat];
+    double *D1[pfock->num_dmat2];
+    double *D2[pfock->num_dmat2];
+    double *D3[pfock->num_dmat2];
     double *F1 = pfock->F1;
     double *F2 = pfock->F2;
     double *F3 = pfock->F3;
@@ -1294,7 +1302,7 @@ PFockStatus_t PFock_computeFock(BasisSet_t basis,
 
     gettimeofday (&tv1, NULL);    
     gettimeofday (&tv3, NULL);
-    for (int i = 0; i < pfock->num_dmat; i++) {
+    for (int i = 0; i < pfock->num_dmat2; i++) {
         GA_Fill(pfock->ga_F[i], &dzero);
     #ifndef __SCF__
         GA_Fill(pfock->ga_K[i], &dzero);
@@ -1308,7 +1316,7 @@ PFockStatus_t PFock_computeFock(BasisSet_t basis,
     lo[0] = myrank;
     hi[0] = myrank;
     lo[1] = 0;
-    for (int i = 0; i < pfock->num_dmat; i++) {
+    for (int i = 0; i < pfock->num_dmat2; i++) {
         int ldD;
         hi[1] = sizeX1 - 1;
         NGA_Access(pfock->ga_D1[i], lo, hi, &D1[i], &ldD);
@@ -1324,7 +1332,7 @@ PFockStatus_t PFock_computeFock(BasisSet_t basis,
     pfock->volumega += (sizeX1 + sizeX2 + sizeX3) * sizeof(double);
     
     gettimeofday (&tv3, NULL);   
-    reset_F(pfock->numF, pfock->num_dmat, F1, F2, F3, F4, F5, F6,
+    reset_F(pfock->numF, pfock->num_dmat2, F1, F2, F3, F4, F5, F6,
             sizeX1, sizeX2, sizeX3, sizeX4, sizeX5, sizeX6);
     gettimeofday (&tv4, NULL);
     pfock->timeinit += (tv4.tv_sec - tv3.tv_sec) +
@@ -1341,7 +1349,7 @@ PFockStatus_t PFock_computeFock(BasisSet_t basis,
         int startP = pfock->blkcolptr_sh[pfock->sblk_col + colid];
         int endP = pfock->blkcolptr_sh[pfock->sblk_col + colid + 1] - 1;
         gettimeofday (&tv3, NULL);       
-        fock_task(basis, pfock->erd, pfock->ncpu_f, pfock->num_dmat,
+        fock_task(basis, pfock->erd, pfock->ncpu_f, pfock->num_dmat2,
                   pfock->shellptr, pfock->shellvalue,
                   pfock->shellid, pfock->shellrid,
                   pfock->f_startind,
@@ -1362,7 +1370,7 @@ PFockStatus_t PFock_computeFock(BasisSet_t basis,
 
     gettimeofday (&tv3, NULL);        
     // reduction on CPU
-    reduce_F(pfock->numF, pfock->num_dmat, F1, F2, F3, F4, F5, F6,
+    reduce_F(pfock->numF, pfock->num_dmat2, F1, F2, F3, F4, F5, F6,
              sizeX1, sizeX2, sizeX3,
              sizeX4, sizeX5, sizeX6,
              maxrowsize, maxcolsize,
@@ -1373,7 +1381,7 @@ PFockStatus_t PFock_computeFock(BasisSet_t basis,
     lo[0] = myrank;
     hi[0] = myrank;
     lo[1] = 0;    
-    for (int i = 0; i < pfock->num_dmat; i++) {
+    for (int i = 0; i < pfock->num_dmat2; i++) {
         hi[1] = sizeX1 - 1;
 #ifdef GA_NB
         // save results for local intergrals
@@ -1439,7 +1447,7 @@ PFockStatus_t PFock_computeFock(BasisSet_t basis,
                     hi[0] = vpid;
                     lo[1] = 0;
                     hi[1] = sizeX1 - 1;
-                    for (int i = 0; i < pfock->num_dmat; i++) {
+                    for (int i = 0; i < pfock->num_dmat2; i++) {
                     #ifdef GA_NB    
                         NGA_NbGet(pfock->ga_D1[i], lo, hi,
                                   VD1[i], &sizeX1, &nbhdlD1);
@@ -1458,7 +1466,7 @@ PFockStatus_t PFock_computeFock(BasisSet_t basis,
                     hi[0] = vpid;
                     lo[1] = 0;
                     hi[1] = sizeX2 - 1;
-                    for (int i = 0; i < pfock->num_dmat; i++) {
+                    for (int i = 0; i < pfock->num_dmat2; i++) {
                     #ifdef GA_NB
                         NGA_NbGet(pfock->ga_D2[i], lo, hi,
                                   VD2[i], &sizeX2, &nbhdlD2);
@@ -1475,7 +1483,7 @@ PFockStatus_t PFock_computeFock(BasisSet_t basis,
                 hi[0] = vpid;
                 lo[1] = 0;
                 hi[1] = sizeX3 - 1;
-                for (int i = 0; i < pfock->num_dmat; i++) {
+                for (int i = 0; i < pfock->num_dmat2; i++) {
                 #ifdef GA_NB
                     NGA_NbGet(pfock->ga_D3[i], lo, hi, 
                               VD3[i], &sizeX3, &nbhdlD3);
@@ -1492,7 +1500,7 @@ PFockStatus_t PFock_computeFock(BasisSet_t basis,
                 NGA_NbWait(&nbhdlF3);
             #endif    
                 // init F bufs
-                reset_F(pfock->numF, pfock->num_dmat, F1, F2, F3, F4, F5, F6,
+                reset_F(pfock->numF, pfock->num_dmat2, F1, F2, F3, F4, F5, F6,
                         sizeX1, sizeX2, sizeX3, sizeX4, sizeX5, sizeX6);
             #ifdef GA_NB    
                 // wait for NbGet
@@ -1518,7 +1526,7 @@ PFockStatus_t PFock_computeFock(BasisSet_t basis,
             int endP = pfock->blkcolptr_sh[vsblk_col + colid + 1] - 1;
 
             gettimeofday (&tv3, NULL);
-            fock_task(basis, pfock->erd, pfock->ncpu_f, pfock->num_dmat,
+            fock_task(basis, pfock->erd, pfock->ncpu_f, pfock->num_dmat2,
                       pfock->shellptr, pfock->shellvalue,
                       pfock->shellid, pfock->shellrid,
                       pfock->f_startind,
@@ -1539,7 +1547,7 @@ PFockStatus_t PFock_computeFock(BasisSet_t basis,
         gettimeofday (&tv3, NULL);
         if (1 == stealed) {
             // reduction
-            reduce_F(pfock->numF, pfock->num_dmat, F1, F2, F3, F4, F5, F6,
+            reduce_F(pfock->numF, pfock->num_dmat2, F1, F2, F3, F4, F5, F6,
                      sizeX1, sizeX2, sizeX3,
                      sizeX4, sizeX5, sizeX6,
                      maxrowsize, maxcolsize,
@@ -1552,7 +1560,7 @@ PFockStatus_t PFock_computeFock(BasisSet_t basis,
             if (vrow != myrow) {
                 lo[0] = vpid;
                 hi[0] = vpid;
-                for (int i = 0; i < pfock->num_dmat; i++) {
+                for (int i = 0; i < pfock->num_dmat2; i++) {
                 #ifdef GA_NB
                     NGA_NbAcc(pfock->ga_F1[i], lo, hi,
                               &F1[i * sizeX1], &sizeX1, &done, &nbhdlF1);
@@ -1566,7 +1574,7 @@ PFockStatus_t PFock_computeFock(BasisSet_t basis,
             } else {
                 lo[0] = myrank;
                 hi[0] = myrank;
-                for (int i = 0; i < pfock->num_dmat; i++) {
+                for (int i = 0; i < pfock->num_dmat2; i++) {
                 #ifdef GA_NB    
                     NGA_NbAcc(pfock->ga_F1[i], lo, hi,
                               &F1[i * sizeX1], &sizeX1, &done, &nbhdlF1);
@@ -1581,7 +1589,7 @@ PFockStatus_t PFock_computeFock(BasisSet_t basis,
             if (vcol != mycol) {
                 lo[0] = vpid;
                 hi[0] = vpid;
-                for (int i = 0; i < pfock->num_dmat; i++) {
+                for (int i = 0; i < pfock->num_dmat2; i++) {
                 #ifdef GA_NB    
                     NGA_NbAcc(pfock->ga_F2[i], lo, hi,
                               &F2[i * sizeX2], &sizeX2, &done, &nbhdlF2);
@@ -1595,7 +1603,7 @@ PFockStatus_t PFock_computeFock(BasisSet_t basis,
             } else {
                 lo[0] = myrank;
                 hi[0] = myrank;
-                for (int i = 0; i < pfock->num_dmat; i++) {
+                for (int i = 0; i < pfock->num_dmat2; i++) {
                 #ifdef GA_NB
                     NGA_NbAcc(pfock->ga_F2[i], lo, hi,
                               &F2[i * sizeX2], &sizeX2, &done, &nbhdlF2);
@@ -1609,7 +1617,7 @@ PFockStatus_t PFock_computeFock(BasisSet_t basis,
             hi[0] = vpid;
             lo[1] = 0;
             hi[1] = sizeX3 - 1;
-            for (int i = 0; i < pfock->num_dmat; i++) {
+            for (int i = 0; i < pfock->num_dmat2; i++) {
             #ifdef GA_NB
                 NGA_NbAcc(pfock->ga_F3[i], lo, hi,
                           &F3[i * sizeX3], &sizeX3, &done, &nbhdlF3);
@@ -1638,7 +1646,7 @@ PFockStatus_t PFock_computeFock(BasisSet_t basis,
     lo[0] = myrank;
     hi[0] = myrank;
     lo[1] = 0;
-    for (int i = 0; i < pfock->num_dmat; i++) {
+    for (int i = 0; i < pfock->num_dmat2; i++) {
         hi[1] = sizeX1 - 1;
         NGA_Release(pfock->ga_D1[i], lo, hi);
         hi[1] = sizeX2 - 1;
@@ -1661,13 +1669,29 @@ PFockStatus_t PFock_computeFock(BasisSet_t basis,
     if (myrank == 0) {
         PFOCK_INFO ("correct F ...\n");
     }
-    
-    // correct F
-    for (int i = 0; i < pfock->num_dmat; i++) {
-        GA_Symmetrize(pfock->ga_F[i]);
-    #ifndef __SCF__
-        GA_Symmetrize(pfock->ga_K[i]);
-    #endif
+  
+    if (pfock->nosymm) {
+        double dhalf = 0.5;
+        for (int i = 0; i < pfock->num_dmat; i++) {
+            GA_Transpose(pfock->ga_F[i + pfock->num_dmat],
+                         pfock->ga_D[0]);
+            GA_Add(&dhalf, pfock->ga_F[i],
+                   &dhalf, pfock->ga_D[0], pfock->ga_F[i]);
+        #ifndef __SCF__
+            GA_Transpose(pfock->ga_K[i + pfock->num_dmat],
+                         pfock->ga_D[0]);
+            GA_Add(&dhalf, pfock->ga_K[i],
+                   &dhalf, pfock->ga_D[0], pfock->ga_K[i]);
+        #endif
+        }
+    } else {
+        // correct F
+        for (int i = 0; i < pfock->num_dmat; i++) {
+            GA_Symmetrize(pfock->ga_F[i]);
+        #ifndef __SCF__
+            GA_Symmetrize(pfock->ga_K[i]);
+        #endif
+        }
     }
     
     return PFOCK_STATUS_SUCCESS;
