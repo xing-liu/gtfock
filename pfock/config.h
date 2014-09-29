@@ -10,8 +10,9 @@
                              //  0 is no debug print info at all,
                              //  10 is full info
 
-#define ALIGN_MALLOC(size,alignment)    _mm_malloc(size, alignment)
-#define ALIGN_FREE(addr)                _mm_free(addr)
+#define alignsize  64
+#define PFOCK_MALLOC(size)    _mm_malloc(size, alignsize)
+#define PFOCK_FREE(addr)      _mm_free(addr)
 
 #if ( _DEBUG_LEVEL_ == -1 )
 #define PFOCK_PRINTF( level, fmt, args... )        {}

@@ -6,66 +6,58 @@
 #include "taskq.h"
 
 
-int init_taskq (PFock_t pfock)
+int init_taskq(PFock_t pfock)
 {
     int dims[2];
     int block[2];
-    int *map;
-    int nprow;
-    int npcol;
-    int i;
-
+    
     // create GA for dynamic scheduler
-    nprow = pfock->nprow;
-    npcol = pfock->npcol;
+    int nprow = pfock->nprow;
+    int npcol = pfock->npcol;
     dims[0] = nprow;
     dims[1] = npcol;
     block[0] = nprow;
     block[1] = npcol;    
-    map = (int *)malloc (sizeof(int) * (nprow + npcol));
-    if (NULL == map)
-    {
+    int *map = (int *)PFOCK_MALLOC(sizeof(int) * (nprow + npcol));
+    if (NULL == map) {
         return -1;
     }    
-    for (i = 0; i < pfock->nprow; i++)
-    {
+    for (int i = 0; i < pfock->nprow; i++) {
         map[i] = i;
     }
-    for (i = 0; i < npcol; i++)
-    {
+    for (int i = 0; i < npcol; i++) {
         map[i + nprow] = i;
     }
-    pfock->ga_taskid = NGA_Create_irreg (C_INT, 2, dims, "array taskid", block, map);
-    if (0 == pfock->ga_taskid)
-    {
+    pfock->ga_taskid =
+        NGA_Create_irreg(C_INT, 2, dims, "array taskid", block, map);
+    if (0 == pfock->ga_taskid) {
         return -1;
     }
-    free (map);
+    PFOCK_FREE(map);
     
     return 0;
 }
 
 
-void clean_taskq (PFock_t pfock)
+void clean_taskq(PFock_t pfock)
 {
-    GA_Destroy (pfock->ga_taskid);
+    GA_Destroy(pfock->ga_taskid);
 }
 
 
-void reset_taskq (PFock_t pfock)
+void reset_taskq(PFock_t pfock)
 {
     int izero = 0;    
-    GA_Fill (pfock->ga_taskid, &izero);
+    GA_Fill(pfock->ga_taskid, &izero);
 }
 
 
-int taskq_next (PFock_t pfock, int myrow, int mycol, int ntasks)
+int taskq_next(PFock_t pfock, int myrow, int mycol, int ntasks)
 {
-    int nxtask;
     int idx[2];
 
     idx[0] = myrow;
     idx[1] = mycol;
-    nxtask = NGA_Read_inc (pfock->ga_taskid, idx, ntasks);   
+    int nxtask = NGA_Read_inc(pfock->ga_taskid, idx, ntasks);   
     return nxtask;
 }

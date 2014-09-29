@@ -1,26 +1,30 @@
 include ../make.in
 
 EXEC = scf
-
 SRC = $(wildcard *.c)
 OBJS := $(addsuffix .o, $(basename $(SRC)))
 
-CFLAGS = -O3 -Wall -openmp -mkl -std=gnu99 -fasm-blocks
-CFLAGS += -Wunknown-pragmas -Wunused-variable #-Wunused-function
-CFLAGS += ${OPTFLAGS}
-#CFLAGS += -DSCF_TIMING
+ifeq "${SCF_TIMMING}" "1"
+CFLAGS += -D__SCF_TIMING__
+endif
+
+ifeq "${SCF_OUT}" "1"
+CFLAGS += -D__SCF_OUT__
+endif
+
 
 INC = -I./                  \
       -I../install          \
+      -I${ERD_INCDIR}       \
       -I${MPI_INCDIR}       \
       -I${SCALAPACK_INCDIR} \
-      -I${GA_INCDIR}        \
-      -I${ERD_INCDIR}
+      -I${BLAS_INCDIR}       
 
 LDFLAGS = -L${MPI_LIBDIR}       \
           -L${GA_LIBDIR}        \
           -L${ARMCI_LIBDIR}     \
           -L${SCALAPACK_LIBDIR} \
+          -L${BLAS_LIBDIR} \
           -L${ERD_LIBDIR}
 
 PFOCK_LIBS = ../install/libpfock.a
@@ -28,6 +32,7 @@ PFOCK_LIBS = ../install/libpfock.a
 LIBS = ${MPI_LIBS}       \
        ${GA_LIBS}        \
        ${ARMCI_LIBS}     \
+       ${BLAS_LIBS} \
        ${SCALAPACK_LIBS} \
        ${PFOCK_LIBS}     \
        ${ERD_LIBS}       \

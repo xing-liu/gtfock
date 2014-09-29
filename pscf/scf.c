@@ -7,10 +7,6 @@
 #include <math.h>
 #include <omp.h>
 #include <unistd.h>
-#include <mkl.h>
-#include <mkl_trans.h>
-#include <ga.h>
-#include <macdecls.h>
 #include <sys/time.h>
 #include <libgen.h>
 
@@ -18,6 +14,11 @@
 #include "CInt.h"
 #include "purif.h"
 
+
+#define MAX_NUM_D    5
+#define NUM_D        3
+#define USE_D_ID     2
+#define IS_SYMM      1
 
 static void usage(char *call)
 {
@@ -40,7 +41,7 @@ static void initial_guess(PFock_t pfock, BasisSet_t basis, int ispurif,
 
     int ga;
     double fzero = 0.0;
-    PFock_getMatGAHandle(pfock, PFOCK_MAT_TYPE_D, 0, &ga);
+    PFock_getMatGAHandle(pfock, PFOCK_MAT_TYPE_D, USE_D_ID, &ga);
     GA_Fill(ga, &fzero);
 
     // load initial guess, only process 0
@@ -52,13 +53,13 @@ static void initial_guess(PFock_t pfock, BasisSet_t basis, int ispurif,
             int epos;
             CInt_getInitialGuess(basis, i, &guess, &spos, &epos);
             int ld = epos - spos + 1;
-            PFock_putDenMat(spos, epos, spos, epos, ld, guess, 0, pfock);
+            PFock_putDenMat(spos, epos, spos, epos, ld, guess, USE_D_ID, pfock);
         }
     }
     NGA_Sync ();
 
     if (1 == ispurif) {
-        PFock_getMat(pfock, PFOCK_MAT_TYPE_D, 0,
+        PFock_getMat(pfock, PFOCK_MAT_TYPE_D, USE_D_ID,
                      rowstart, rowend, colstart, colend,
                      ldD, D_block);
     }
@@ -100,16 +101,16 @@ static void fock_build(PFock_t pfock, BasisSet_t basis,
     // put density matrix
     if (1 == ispurif) {
         PFock_putDenMat(rowstart, rowend, colstart, colend,
-                        stride, D_block, 0, pfock);
+                        stride, D_block, USE_D_ID, pfock);
     }
-    PFock_commitDenMats (pfock);
+    PFock_commitDenMats(pfock);
 
     // compute Fock matrix
     PFock_computeFock(basis, pfock);
 
     // get Fock matrix
     if (1 == ispurif) {
-        PFock_getMat(pfock, PFOCK_MAT_TYPE_F, 0,
+        PFock_getMat(pfock, PFOCK_MAT_TYPE_F, USE_D_ID,
                      rowstart, rowend, colstart, colend,
                      stride, F_block);
     }
@@ -126,8 +127,7 @@ static void init_oedmat(BasisSet_t basis, PFock_t pfock,
     int ldx = purif->ldx;
 
     MPI_Comm_rank (MPI_COMM_WORLD, &myrank);
-    if (myrank == 0)
-    {
+    if (myrank == 0) {
         printf ("Preprocessing one electron matrices ...\n");
     }
     int srow_purif = purif->srow_purif;
@@ -143,8 +143,7 @@ static void init_oedmat(BasisSet_t basis, PFock_t pfock,
     }
     t1 = MPI_Wtime();
     PFock_createOvlMat(pfock, basis);
-    if (purif->runpurif == 1)
-    {
+    if (purif->runpurif == 1) {
         PFock_getOvlMat(pfock, srow_purif, erow_purif, scol_purif, ecol_purif,
                         ldx, purif->S_block);
         PFock_getOvlMat2(pfock, srow_purif, erow_purif, scol_purif, ecol_purif,
@@ -290,19 +289,11 @@ int main (int argc, char **argv)
         printf("Initializing pfock ...\n");
     }
     PFock_t pfock;
-    PFock_create(basis, nprow_fock, npcol_fock, 1, nblks_fock,
-                 1e-10, &pfock);
+    PFock_create(basis, nprow_fock, npcol_fock, MAX_NUM_D, nblks_fock, 1e-10, &pfock);
     if (myrank == 0) {
         double mem_cpu;
-        double mem_mic;
-        double erd_mem_cpu;
-        double erd_mem_mic;
-        PFock_getMemorySize(pfock, &mem_cpu, &mem_mic,
-                            &erd_mem_cpu, &erd_mem_mic);
-        printf("  CPU uses %.3lf MB\n"
-               "  MIC uses %.3lf MB\n",
-               (mem_cpu + erd_mem_cpu) / 1024.0 / 1024.0,
-               (mem_mic + erd_mem_mic) / 1024.0 / 1024.0);
+        PFock_getMemorySize(pfock, &mem_cpu);
+        printf("  CPU uses %.3lf MB\n", mem_cpu / 1024.0 / 1024.0);
         printf("  Done\n");
     }
 
@@ -327,6 +318,7 @@ int main (int argc, char **argv)
     if (myrank == 0) {
         printf("  initialing D ...\n");
     }
+    PFock_setNumDenMat(NUM_D, pfock);
     initial_guess(pfock, basis, purif->runpurif,
                   rowstart, rowend, colstart, colend,
                   purif->D_block, purif->ldx);
@@ -387,7 +379,7 @@ int main (int argc, char **argv)
                    t2 - t1, diis_flops / (t2 - t1) / 1e9);
         }
         
-    #ifdef SCF_OUT
+    #ifdef __SCF_OUT__
         if (myrank == 0) {
             double outbuf[nfunctions];
             char fname[1024];
@@ -396,7 +388,7 @@ int main (int argc, char **argv)
             assert(fp != NULL);
             for (int i = 0; i < nfunctions; i++) {
                 PFock_getMat(pfock, PFOCK_MAT_TYPE_F,
-                             i, i, 0, nfunctions - 1,
+                             i, i, USE_D_ID, nfunctions - 1,
                              outbuf, nfunctions);
                 for (int j = 0; j < nfunctions; j++) {
                     fprintf(fp, "%le\n", outbuf[j]);
@@ -412,14 +404,6 @@ int main (int argc, char **argv)
         int it = compute_purification(purif, purif->F_block, purif->D_block);
         t2 = MPI_Wtime();
         MPI_Barrier(MPI_COMM_WORLD);
-
-#if 0
-        int ga_tmp;
-        PFock_getMatGAHandle(pfock, PFOCK_MAT_TYPE_D, &ga_tmp);
-        compute_eigensolve(ga_tmp, purif, purif->F_block,
-                           nprow_fock, npcol_fock);
-#endif
-
         if (myrank == 0) {
             printf("    purification takes %.3lf secs,"
                    " %d iterations, %.3lf Gflops\n",
@@ -430,7 +414,7 @@ int main (int argc, char **argv)
         t4 = MPI_Wtime ();
         totaltime += t4 - t3;
 
-#ifdef SCF_TIMING
+#ifdef __SCF_TIMING__
         PFock_getStatistics(pfock);
         double purif_timedgemm;
         double purif_timepass;

@@ -6,9 +6,9 @@
 #include "CInt.h"
 
 
-int schwartz_screening (PFock_t pfock, BasisSet_t basis);
+int schwartz_screening(PFock_t pfock, BasisSet_t basis);
 
-void clean_screening (PFock_t pfock);
+void clean_screening(PFock_t pfock);
 
 
 #endif /* __SCREENING_H__ */
