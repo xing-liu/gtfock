@@ -7,7 +7,7 @@ MPICXX = mpiicpc
 
 DYNAMIC     = 1
 DO_SCF      = 0
-SCF_TIMMING = 1
+SCF_TIMMING = 0
 SCF_OUT     = 0
 
 #OPTFLAGS = -offload-option,mic,compiler,"-z defs -no-opt-prefetch"

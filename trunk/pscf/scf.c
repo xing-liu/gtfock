@@ -18,7 +18,7 @@
 #define MAX_NUM_D    5
 #define NUM_D        3
 #define USE_D_ID     2
-#define IS_SYMM      1
+#define IS_SYMM      0
 
 static void usage(char *call)
 {
@@ -107,7 +107,7 @@ static void fock_build(PFock_t pfock, BasisSet_t basis,
 
     // compute Fock matrix
     PFock_computeFock(basis, pfock);
-
+    
     // get Fock matrix
     if (1 == ispurif) {
         PFock_getMat(pfock, PFOCK_MAT_TYPE_F, USE_D_ID,
@@ -289,7 +289,8 @@ int main (int argc, char **argv)
         printf("Initializing pfock ...\n");
     }
     PFock_t pfock;
-    PFock_create(basis, nprow_fock, npcol_fock, MAX_NUM_D, nblks_fock, 1e-10, &pfock);
+    PFock_create(basis, nprow_fock, npcol_fock, nblks_fock, 1e-10,
+                 MAX_NUM_D, IS_SYMM, &pfock);
     if (myrank == 0) {
         double mem_cpu;
         PFock_getMemorySize(pfock, &mem_cpu);
@@ -387,7 +388,7 @@ int main (int argc, char **argv)
             FILE *fp = fopen(fname, "w+");
             assert(fp != NULL);
             for (int i = 0; i < nfunctions; i++) {
-                PFock_getMat(pfock, PFOCK_MAT_TYPE_F,
+                PFock_getMat(pfock, PFOCK_MAT_TYPE_F, USE_D_ID,
                              i, i, USE_D_ID, nfunctions - 1,
                              outbuf, nfunctions);
                 for (int j = 0; j < nfunctions; j++) {

@@ -30,7 +30,7 @@ void load_local_bufD(PFock_t pfock)
     lo[0] = myrank;
     hi[0] = myrank;
     lo[1] = 0;
-    for (int i = 0; i < pfock->num_dmat; i++) {
+    for (int i = 0; i < pfock->num_dmat2; i++) {
     #ifdef GA_NB
         ga_nbhdl_t nbnb;
     #endif
@@ -128,7 +128,7 @@ void store_local_bufF(PFock_t pfock)
     lo[0] = myrank;
     hi[0] = myrank;
     lo[1] = 0;
-    for (int i = 0; i < pfock->num_dmat; i++) {
+    for (int i = 0; i < pfock->num_dmat2; i++) {
     #ifdef GA_NB    
         ga_nbhdl_t nbnb;
     #endif
