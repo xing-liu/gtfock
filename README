@@ -1,0 +1,191 @@
+================================================================
+A. Setup
+================================================================
+export WORK_TOP=$PWD
+
+
+================================================================
+B. Installing Global Arrays using B0 or B1
+================================================================
+
+================================================================
+B0. Installing Global Arrays on MPI-3
+================================================================
+1. Installing armci-mpi
+cd $WORK_TOP
+git clone git://git.mpich.org/armci-mpi.git || git clone http://git.mpich.org/armci-mpi.git
+cd armci-mpi
+git checkout mpi3rma
+./autogen.sh
+mkdir build
+cd build
+../configure CC=mpiicc --prefix=$WORK_TOP/external-armci
+make -j12
+make install
+
+2. Installing Global Arrays
+cd $WORK_TOP
+wget http://hpc.pnl.gov/globalarrays/download/ga-5-3.tgz
+tar xzf ga-5-3.tgz
+cd ga-5-3
+./configure CC=mpiicc MPICC=mpiicc CXX=mpiicpc MPICXX=mpiicpc \
+F77=mpiifort MPIF77=mpiifort FC=mpiifort MPIFC=mpiifort\
+--with-mpi --with-armci=$WORK_TOP/external-armci --prefix=$WORK_TOP/GAlib
+make -j12 install
+
+================================================================
+B1. Installing Global Arrays on ARMCI
+================================================================
+cp config_ga.py $WORK_TOP
+python config_ga.py download openib
+
+
+===============================================================
+C. Installing ERD libraries
+===============================================================
+cd $WORK_TOP
+svn co https://github.com/Maratyszcza/OptErd/trunk OptErd
+make -j12
+prefix=$WORK_TOP/ERDlib make install
+
+
+===============================================================
+D. Installing GB-SCF
+===============================================================
+cd $WORK_TOP
+svn co https://github.com/Maratyszcza/GB-SCF
+cd GB-SCF/trunk/
+cp make.in.default make.in
+
+# change the following variables in make.in
+SCALAPACK_INCDIR = /opt/intel/mkl/include
+SCALAPACK_LIBDIR = /opt/intel/mkl/lib/intel64/
+SCALAPACK_LIBS = -lmkl_scalapack_lp64 -lmkl_blacs_intelmpi_lp64
+MPICC = mpicc
+MPI_LIBDIR = /opt/mpich2/lib
+MPI_LIBS =
+MPI_INCDIR = /opt/mpich2/include
+
+NOTE: Pre-defined make.in for Stampede can be found in the directory 
+
+#if using B0
+export GA_TOP=$WORK_TOP/GAlib
+export ARMCI_TOP=$WORK_TOP/external-armci
+#else if using B1
+export GA_TOP=$WORK_TOP/GAlib-armci
+export ARMCI_TOP=$WORK_TOP/GAlib-armci
+#endif
+
+export ERD_TOP=$WORK_TOP/ERDlib
+make
+
+
+===============================================================
+E. Running GB-SCF
+===============================================================
+set environment variables
+
+# set MPI enviroment. It might not be required on TH-2
+export MV2_ENABLE_AFFINITY=0
+export KMP_DYNAMIC=FALSE
+
+# set OpenMP for CPU
+export OMP_NUM_THREADS=<nthreads>
+export KMP_AFFINITY=granularity=fine,compact
+
+# set OpenMP for MIC
+export MIC_ENV_PREFIX=MIC
+export MIC_OMP_NUM_THREADS=<nthreads_mic>
+export MIC_KMP_AFFINITY=granularity=fine,balanced
+export MIC_USE_2MB_BUFFERS=64K
+
+# set offload model, default is 0
+# NOTE: mic_fraction = 0 means no offloading
+export GTFOCK_OFFLOAD=<mic_fraction>
+
+# How to run the code
+mpirun -np <nprocs> ./scf <basis> <xyz> \
+<nprow> <npcol> <nprow2> <npcol2> <ntasks> <niters>
+
+NOTE: nprow x npcol must be equal to nprocs
+NOTE: nprow2 x npcol2 must be smaller than nprocs
+NOTE: suggested values for ntasks: 3, 4, 5
+NOTE: for now, use nprows = nprow, npcol = npcol2
+
+<nprocs>: number of MPI processes
+<basis>:  basis file
+<xyz>:    xyz file
+<nprow>:  number of MPI processes per row
+<npcol>:  number of MPI processes per col
+<nprow2>: number of MPI processes per row used for purification (eigenvalue solve)
+<npcol2>: number of MPI processes per col used for purification (eigenvalue solve)
+<ntasks>: each MPI process has ntasks x ntasks tasks
+<niters>: number of SCF iterations
+
+
+===============================================================
+F. Parsing the results
+===============================================================
+1. Correctness
+The code outputs the energy for each SCF iteration,
+for example, "energy -433.12733365, 2.270962e-07".
+
+-433.12733365 is the energy value, 2.270962e-07 is the difference between
+the energy of current iteration and the energy of the last iteration.
+
+Use graphene_12_54_114.xyz and graphene_36_180_396.xyz for correctness test.
+The initial energy of graphene_12_54_114.xyz is -397.12392572.
+The initial energy of graphene_36_180_396.xyz -2297.42848355.
+Run the SCF for 10 steps, the energy should converge.
+
+2. Performance
+For the performance test, only run the SCF for 1 iteration.
+
+Sample output:
+
+Job information:
+  #atoms     = 36       // number of atoms
+  #shells    = 180      // number of shells
+  #functions = 396      // number of basis functions
+  fock build uses   4 (2x2) nodes  // number of nodes used for fock build
+  purification uses 4 (2x2) nodes  // number of nodes used for purification
+  #tasks = 64 (8x8)      // number of tasks per node
+  #nthreads_cpu = 6      // number of threads on CPU
+  #mic_devices = 2       // number MIC devices
+  #nthreads_mic = 240    // number of threads on MIC
+Initializing pfock ...
+  FD size (198 198 396 396)  // size of F1(D1), F2(D2) and F3(D3)
+  CPU uses 22.074 MB         // memory usage of CPU for fock build
+  MIC uses 146.347 MB        // memory usage of MIC for fock build
+  takes 0.525 secs         
+  Done
+Initializing purification ...
+  CPU uses 3.290 MB          // memory usage of MIC for purification
+  Done
+Preprocessing one electron matrices ...
+  computing X
+  computing H
+  takes 1.562 secs
+  Done
+Computing SCF ...            // main computation
+  iter 0
+    purification takes 0.516 secs, 101 iterations, 49.613 Gflops  // purification time, Flops
+    fock build takes 15.254 secs         // fock build time
+    correction takes 0.007 secs          // corection time
+    energy -2297.43027190, 2.297430e+03  // energy
+    PFock Statistics:
+      average totaltime = 15.249         // total time of fock build
+      average timeinit = 3.651           // execution time of reset F and D matrices
+      average timecomp = 10.564          // compute time
+      average timereduce = 0.682         // execution time of reduction
+      comp/total = 0.693                 // compute time over total time (parallel efficiency)
+      usq = 0.0000e+00 (lb = -nan)       // not used
+      uitl = 0.0000e+00 (lb = -nan)      // not used
+      nsq = 1.3269e+08 (screening = 0.000)  // not used
+      load blance = 1.000                   // load balancing (>= 1.0)
+      steals = 0.000 (average =0.000)       // not used
+      stealfrom = 0.000 (average = 0.000)   // not used
+      GAcalls = 6.000                       // number of Global Arrays communication
+      GAvolume 4.786 MB                     // communication volume of Global Arrays
+  totally takes 15.780 secs: 15.780 secs/iters  // total time and average time per iterations
+  Done

@@ -1,0 +1,36 @@
+alignlen = 64
+
+CC  = icc
+CXX = icpc
+FC  = ifort
+AR  = xiar rcs
+
+SCALAPACK_INCDIR = /opt/intel/mkl/include/
+SCALAPACK_LIBDIR = /opt/intel/mkl/lib/intel64/ 
+SCALAPACK_LIBS = -lmkl_scalapack_lp64 -lmkl_blacs_intelmpi_lp64
+
+MPICC = mpiicc
+MPI_LIBDIR = /opt/mpich2/lib/ 
+MPI_LIBS =
+MPI_INCDIR = /opt/mpich2/include
+
+GA_INCDIR = ${GA_TOP}/include
+GA_LIBDIR = ${GA_TOP}/lib
+GA_LIBS = -lga
+
+ARMCI_INCDIR = ${ARMCI_TOP}/include
+ARMCI_LIBDIR = ${ARMCI_TOP}/lib
+ARMCI_LIBS = -larmci
+
+ERD_INCDIR = ${ERD_TOP}/include
+ERD_LIBDIR = ${ERD_TOP}/lib
+ERD_LIBS = ${ERD_TOP}/lib/libcint.a ${ERD_TOP}/lib/liberd.a ${ERD_TOP}/lib/liboed.a
+
+OPTFLAGS = -offload-option,mic,compiler,"-z defs -no-opt-prefetch"
+OPTFLAGS = -qno-offload
+
+ifeq "${arch}" "avx"
+OPTFLAGS += -m64 -xAVX
+else
+OPTFLAGS += -m64 -xHost
+endif
