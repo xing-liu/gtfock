@@ -9,10 +9,6 @@ The example SCF code can be run as
 {{{
 mpirun -np <nprocs> ./scf <basis> <xyz> <nprow> <npcol> <np2> <ntasks> <niters>
 }}}
-
- # NOTE: nprow x npcol must be equal to nprocs
- # NOTE: np2 x np2 x np2 must be smaller than nprocs
- # NOTE: suggested values for ntasks: 3, 4, 5
  * *nprocs*: the number of MPI processes
  * *basis*:  the basis file
  * *xyz*:    the xyz file
@@ -21,6 +17,10 @@ mpirun -np <nprocs> ./scf <basis> <xyz> <nprow> <npcol> <np2> <ntasks> <niters>
  * *np2*: the number of MPI processes per one dimension for purification (eigenvalue solve)
  * *ntasks*: the each MPI process has ntasks x ntasks tasks
  * *niters*: the number of SCF iterations
+ *NOTE*
+ # nprow x npcol must be equal to nprocs
+ # np2 x np2 x np2 must be smaller than nprocs
+ # suggested values for ntasks: 3, 4, 5
 
 # For example, the following command run the SCF code on graphene_12_54_114.xyz
 # with 12 MPI processes for 10 iterations. The number of processes used for
