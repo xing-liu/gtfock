@@ -1,4 +1,3 @@
-  * [GettingStarted Getting Started]
   * [Downloads Downloads]
   * [Documentation Documentation]
   * [Publications]
