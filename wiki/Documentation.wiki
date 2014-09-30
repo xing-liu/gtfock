@@ -13,14 +13,14 @@ mpirun -np <nprocs> ./scf <basis> <xyz> <nprow> <npcol> <np2> <ntasks> <niters>
  # NOTE: nprow x npcol must be equal to nprocs
  # NOTE: np2 x np2 x np2 must be smaller than nprocs
  # NOTE: suggested values for ntasks: 3, 4, 5
- # nprocs: number of MPI processes
- # basis:  basis file
- # xyz:    xyz file
- # nprow:  number of MPI processes per row
- # npcol:  number of MPI processes per col
- # np2: number of MPI processes per one dimension for purification (eigenvalue solve)
- # ntasks: each MPI process has ntasks x ntasks tasks
- # niters: number of SCF iterations
+ * *nprocs*: number of MPI processes
+ * basis:  basis file
+ * xyz:    xyz file
+ * nprow:  number of MPI processes per row
+ * npcol:  number of MPI processes per col
+ * np2: number of MPI processes per one dimension for purification (eigenvalue solve)
+ * ntasks: each MPI process has ntasks x ntasks tasks
+ * niters: number of SCF iterations
 
 # For example, the following command run the SCF code on graphene_12_54_114.xyz
 # with 12 MPI processes for 10 iterations. The number of processes used for
