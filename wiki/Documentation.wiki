@@ -42,7 +42,7 @@ PFock_computeFock(basis, pfock);
 PFock_getMat(pfock, PFOCK_MAT_TYPE_F, 1, rowstart, rowend, colstart, colend, stride, F_block);
 }}}
 
-The detailed API reference can found [here hehe].
+The detailed API reference can found [here http://www.cc.gatech.edu/~xliu66/gtfock/doc/html/pfock_8h.html].
 
 ==Example SCF code==
 GTFock also includes an example SCF code, which demonstrates how to use GTFock to build a non-trivial quantum chemistry application. The example SCF code uses a variant of McWeeny purification, called canonical purification, to compute the density matrix, which scales better than diagonalization approaches. In the example SCF code, a 3D matrix-multiply kernel is implemented for efficient purification calculations.
