@@ -3,10 +3,11 @@ TBD
 
 = Prerequisites =
 
-StokesDT runs on x86 based Linux systems with Pentium 4 or more recent processors.
+StokesDT runs on distributed 
 
 = Installation =
 
+On this page, a step-by-step description of the build process and necessary and optional environment variables is outlined. In addition, based on the experiences of developers and users how-to's for various platforms have been created. These how-to's will be updated with additional platforms and better environment variables over time.
 
 = Running Simulations =
 
