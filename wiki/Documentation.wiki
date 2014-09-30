@@ -6,7 +6,9 @@ GTFock provides a flexible interface for constructing Fock matrices on distribut
 GTFock also includes an example SCF code, which demonstrates how to use GTFock to build a non-trivial quantum chemistry application.
 
 The example SCF code can be run as
+{{{
 mpirun -np <nprocs> ./scf <basis> <xyz> <nprow> <npcol> <np2> <ntasks> <niters>
+}}}
 
 # NOTE: nprow x npcol must be equal to nprocs
 # NOTE: np2 x np2 x np2 must be smaller than nprocs
