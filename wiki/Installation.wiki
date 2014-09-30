@@ -58,8 +58,8 @@ cp config_ga.py $WORK_TOP
 python config_ga.py download openib
 }}}
 
-==Installing the OptERD library==
-The OptERD library will been installed in $WORK_TOP/ERDlib.
+==Installing the OptErd library==
+The OptErd library will been installed in $WORK_TOP/ERDlib.
 {{{
 cd $WORK_TOP
 svn co https://github.com/Maratyszcza/OptErd/trunk OptErd
