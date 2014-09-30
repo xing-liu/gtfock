@@ -1,0 +1,15 @@
+TBD
+
+= Prerequisites =
+
+StokesDT runs on x86 based Linux systems with Pentium 4 or more recent processors.
+
+= Installation =
+
+
+= Running Simulations =
+
+
+= Using StokesDT as a Library =
+
+= Using StokesDT from Matlab =
