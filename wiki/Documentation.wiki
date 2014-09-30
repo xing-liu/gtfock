@@ -1,9 +1,27 @@
 #labels Featured
 ==API Reference==
-GTFock provides a flexible interface for constructing Fock matrices on distributed systems. The
+GTFock provides a flexible interface for constructing Fock matrices on distributed systems. A typical invocation of GTFock is composed of the following five steps.
+
+  # Creating a PFock computing engine
+{{{
+/**
+ * Create a PFock computing engine on 3x3 MPI processes.
+ * Each MPI process owns 16 (4x4) tasks.
+ * The screening threshold is 1e-10. The maximum number
+ * of density matrices can be computed is 4. The input
+ * density
+ * matrices can be non-symmetric.
+ **/ 
+PFock_t pfock;
+PFock_create(basis, 3, 3, 4, 1e-10, 5, 0, &pfock);
+}}}
+  # Setting the number of density matrices to be computed
+  # Putting local data into the global densities matrices
+  # Computing Fock matrices
+  # Getting data from the global Fock matrices
 
 ==Example SCF code==
-GTFock also includes an example SCF code, which demonstrates how to use GTFock to build a non-trivial quantum chemistry application.
+GTFock also includes an example SCF code, which demonstrates how to use GTFock to build a non-trivial quantum chemistry application. The example SCF code uses a variant of McWeeny purification, called canonical purification, to compute the density matrix, which scales better than diagonalization approaches. In the example SCF code, a 3D matrix-multiply kernel is implemented for efficient purification calculations.
 
 The example SCF code can be run as
 {{{
