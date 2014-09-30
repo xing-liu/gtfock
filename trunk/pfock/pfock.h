@@ -3,10 +3,12 @@
 
 
 #include <omp.h>
-
 #include "CInt.h"
 
-
+/** 
+ * @struct  PFock
+ * @brief   PFock computing engine.
+ */
 struct PFock {
     BasisSet_t basis;
 
@@ -178,23 +180,41 @@ struct PFock {
 typedef struct PFock *PFock_t;
 
 
+/** 
+ * @enum   PFockStatus_t
+ * @brief  Defines the return status of GTFock functions.
+ */
 typedef enum
 {
+    /// Successful
     PFOCK_STATUS_SUCCESS = 0,
+    /// Initialization errors
     PFOCK_STATUS_INIT_FAILED = 1,
+    /// Memory allocation errors
     PFOCK_STATUS_ALLOC_FAILED = 2,
-    PFOCK_STATUS_INVALID_VALUE = 3,
+    /// Invalid values
+    PFOCK_STATUS_INVALID_VALUE = 3,   
+    /// Runtime errors
     PFOCK_STATUS_EXECUTION_FAILED = 4,
+    /// Internal errors
     PFOCK_STATUS_INTERNAL_ERROR = 5
 } PFockStatus_t;
 
 
+/** 
+ * @enum   PFockMatType_t
+ * @brief  Defines the matrix types.
+ */
 typedef enum
 {
+    /// Densitry matrix
     PFOCK_MAT_TYPE_D = 0,
+    /// Fock matrix   
     PFOCK_MAT_TYPE_F = 1,
+    /// Coulomb matrix
     PFOCK_MAT_TYPE_J = 2,
-    PFOCK_MAT_TYPE_K = 3
+    /// Exchange matrix
+    PFOCK_MAT_TYPE_K = 3   
 } PFockMatType_t;
 
 
@@ -214,6 +234,8 @@ typedef enum
  * @param[in] max_numdmat  the maximum number of density matrices
  * @param[in] symm         whether the density matrices are symmetric or not  
  * @param[in] pfock        the pointer to the PFock_t compute engine returned
+ *
+ * @return    the function return status
  */
 PFockStatus_t PFock_create(BasisSet_t basis, int nprow, int npcol, int ntasks,
                            double tolscr, int max_numdmat, int symm,
@@ -222,15 +244,19 @@ PFockStatus_t PFock_create(BasisSet_t basis, int nprow, int npcol, int ntasks,
 /** 
  * @brief  Destroy the PFock compute engine. 
  *
- * @param[inout] pfock  the pointer to the PFock_t compute engine 
+ * @param[in] pfock  the pointer to the PFock_t compute engine
+ *
+ * @return    the function return status
  */
 PFockStatus_t PFock_destroy(PFock_t pfock);
 
 /**
  * @brief  Set the number of density matrices.
  *
- * @param[in] numdmat   the specified number of density matrices
- * @param[inout] pfock  the pointer to the PFock_t compute engine 
+ * @param[in] numdmat  the specified number of density matrices
+ * @param[in] pfock    the pointer to the PFock_t compute engine
+ *
+ * @return    the function return status 
  */
 PFockStatus_t PFock_setNumDenMat(int numdmat, PFock_t pfock);
 
@@ -248,7 +274,9 @@ PFockStatus_t PFock_setNumDenMat(int numdmat, PFock_t pfock);
  * @param[in] dmat      the pointer to the local data
  * @param[in] stride    the leading dimension of the local data
  * @param[in] index     the index of the density matrix
- * @param[inout] pfock  the pointer to the PFock_t compute engine
+ * @param[in] pfock     the pointer to the PFock_t compute engine
+ *
+ * @return    the function return status
  */
 PFockStatus_t PFock_putDenMat(int rowstart, int rowend,
                               int colstart, int colend,
@@ -258,9 +286,11 @@ PFockStatus_t PFock_putDenMat(int rowstart, int rowend,
 /**
  * @brief  Fill the speficied global densitry matrix a specific value.
  *
- * @param[in] value     the value to be filled 
- * @param[in] index     the index of the density matrix
- * @param[inout] pfock  the pointer to the PFock_t compute engine
+ * @param[in] value  the value to be filled 
+ * @param[in] index  the index of the density matrix
+ * @param[in] pfock  the pointer to the PFock_t compute engine
+ *
+ * @return    the function return status
  */
 PFockStatus_t PFock_fillDenMat(double value, int index,
                                PFock_t pfock);
@@ -271,14 +301,18 @@ PFockStatus_t PFock_fillDenMat(double value, int index,
  * This function is called loosely synchronously by all processes
  * after all PFockPutDenMat calls.
  *
- * @param[inout] pfock  the pointer to the PFock_t compute engine 
+ * @param[in] pfock  the pointer to the PFock_t compute engine
+ *
+ * @return    the function return status 
  */ 
 PFockStatus_t PFock_commitDenMats(PFock_t pfock);
 
 /**
  * @brief  Sync all the global array operations.
  *
- * @param[inout] pfock  the pointer to the PFock_t compute engine 
+ * @param[in] pfock  the pointer to the PFock_t compute engine
+ *
+ * @return    the function return status 
  */
 PFockStatus_t PFock_sync(PFock_t pfock);
 
@@ -297,7 +331,9 @@ PFockStatus_t PFock_sync(PFock_t pfock);
  * @param[in] colend    the ending column index of the
  *                      global densitry matrix section
  * @param[in] stride    the leading dimension of the local data
- * @param[out] mat       the pointer to the local data  
+ * @param[out] mat      the pointer to the local data
+ *
+ * @return    the function return status  
  */
 PFockStatus_t PFock_getMat(PFock_t pfock,
                            PFockMatType_t type,
@@ -319,6 +355,8 @@ PFockStatus_t PFock_getMat(PFock_t pfock,
  *                       of the local data
  * @param[out] colend    the pointer to the ending column index
  *                       of the local data
+ *
+ * @return    the function return status
  */
 PFockStatus_t PFock_getLocalMatInds(PFock_t pfock,
                                     int *rowstart,
@@ -339,7 +377,9 @@ PFockStatus_t PFock_getLocalMatInds(PFock_t pfock,
  * @param[out] colend    the pointer to the ending column index
  *                       of the local data
  * @param[out] stride    the pointer to the leading dimension of the local data
- * @param[out] mat       the pointer to the local data   
+ * @param[out] mat       the pointer to the local data
+ *
+ * @return    the function return status   
  */
 PFockStatus_t PFock_getLocalMatPtr(PFock_t pfock,
                                    PFockMatType_t type,
@@ -354,7 +394,9 @@ PFockStatus_t PFock_getLocalMatPtr(PFock_t pfock,
  * @param[in] pfock  the pointer to the PFock_t compute engine
  * @param[in] type   the type of the matrix
  * @param[in] index  the index of the density matrix 
- * @param[out] ga    the pointer to the gloal array handle   
+ * @param[out] ga    the pointer to the gloal array handle
+ *
+ * @return    the function return status   
  */
 PFockStatus_t PFock_getMatGAHandle(PFock_t pfock,
                                    PFockMatType_t type, int index,
@@ -366,34 +408,136 @@ PFockStatus_t PFock_getMatGAHandle(PFock_t pfock,
  * This function is called loosely synchronously by all processes
  * to compute all J and K matrices
  *
- * @param[in]    basis  the pointer to the BasisSet_t
- * @param[inout] pfock  the pointer to the PFock_t compute engine
+ * @param[in] basis  the pointer to the BasisSet_t
+ * @param[in] pfock  the pointer to the PFock_t compute engine
+ *
+ * @return    the function return status
  */
 PFockStatus_t PFock_computeFock(BasisSet_t basis,
                                 PFock_t pfock);
 
+/**
+ * @brief  Creates a Core Hamilton matrix
+ *
+ * This function is called loosely synchronously by all processes
+ * to compute all J and K matrices
+ *
+ * @param[in] pfock  the pointer to the PFock_t compute engine
+ * @param[in] basis  the pointer to the BasisSet_t
+ *
+ * @return    the function return status 
+ */
 PFockStatus_t PFock_createCoreHMat(PFock_t pfock, BasisSet_t basis);
-    
+
+/**
+ * @brief  Destory the Core Hamilton matrix
+ *
+ * This function is called loosely synchronously by all processes.
+ *
+ * @param[in] pfock  the pointer to the PFock_t compute engine
+ *
+ * @return    the function return status
+ */    
 PFockStatus_t PFock_destroyCoreHMat(PFock_t pfock);
 
+/**
+ * @brief  Returns a block of the Core Hamilton matrix
+ *
+ * @param[in] pfock      the pointer to the PFock_t compute engine
+ * @param[out] rowstart  the pointer to the starting row index of the local data
+ * @param[out] rowend    the pointer to the ending row index of the local data
+ * @param[out] colstart  the pointer to the starting column index
+ *                       of the local data
+ * @param[out] colend    the pointer to the ending column index
+ *                       of the local data
+ * @param[out] stride    the pointer to the leading dimension of the local data
+ * @param[out] mat       the pointer to the local data
+ *
+ * @return    the function return status   
+ */
 PFockStatus_t PFock_getCoreHMat(PFock_t pfock, int rowstart, int rowend,
                                 int colstart, int colend,
                                 int stride, double *mat);
 
+/**
+ * @brief  Creates a Overlap matrix and its square root
+ *
+ * This function is called loosely synchronously by all processes.
+ *
+ * @param[in] pfock  the pointer to the PFock_t compute engine
+ * @param[in] basis  the pointer to the BasisSet_t
+ *
+ * @return    the function return status 
+ */
 PFockStatus_t PFock_createOvlMat(PFock_t pfock, BasisSet_t basis);
 
+/**
+ * @brief  Destory the Overlap matrix
+ *
+ * This function is called loosely synchronously by all processes.
+ *
+ * @param[in] pfock  the pointer to the PFock_t compute engine
+ *
+ * @return    the function return status
+ */  
 PFockStatus_t PFock_destroyOvlMat(PFock_t pfock);
-                                      
+
+/**
+ * @brief  Returns a block of the Overlap matrix
+ *
+ * @param[in] pfock      the pointer to the PFock_t compute engine
+ * @param[out] rowstart  the pointer to the starting row index of the local data
+ * @param[out] rowend    the pointer to the ending row index of the local data
+ * @param[out] colstart  the pointer to the starting column index
+ *                       of the local data
+ * @param[out] colend    the pointer to the ending column index
+ *                       of the local data
+ * @param[out] stride    the pointer to the leading dimension of the local data
+ * @param[out] mat       the pointer to the local data
+ *
+ * @return    the function return status   
+ */                                      
 PFockStatus_t PFock_getOvlMat(PFock_t pfock, int rowstart, int rowend,
                               int colstart, int colend,
                               int stride, double *mat);
 
+/**
+ * @brief  Returns a block of the square root (X) of the Overlap matrix
+ *
+ * @param[in] pfock      the pointer to the PFock_t compute engine
+ * @param[out] rowstart  the pointer to the starting row index of the local data
+ * @param[out] rowend    the pointer to the ending row index of the local data
+ * @param[out] colstart  the pointer to the starting column index
+ *                       of the local data
+ * @param[out] colend    the pointer to the ending column index
+ *                       of the local data
+ * @param[out] stride    the pointer to the leading dimension of the local data
+ * @param[out] mat       the pointer to the local data
+ *
+ * @return    the function return status   
+ */  
 PFockStatus_t PFock_getOvlMat2(PFock_t pfock, int rowstart, int rowend,
                                int colstart, int colend,
                                int stride, double *mat);
 
+/**
+ * @brief  Returns the memory usage of the PFock computing engine
+ *
+ * @param[in] pfock     the pointer to the PFock_t compute engine
+ * @param[out] mem_cpu  the pointer to the memory usage
+ *
+ * @return    the function return status
+ */ 
 PFockStatus_t PFock_getMemorySize(PFock_t pfock, double *mem_cpu);
 
-PFockStatus_t PFock_getStatistics (PFock_t pfock);
+/**
+ * @brief  Prints the performance results of the PFock computing engine
+ *
+ * @param[in] pfock     the pointer to the PFock_t compute engine
+ *
+ * @return    the function return status
+ */
+PFockStatus_t PFock_getStatistics(PFock_t pfock);
+
 
 #endif /* #ifndef __PFOCK_H__ */

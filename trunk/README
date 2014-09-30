@@ -44,7 +44,7 @@ python config_ga.py download openib
 
 
 ===============================================================
-C. Installing ERD libraries
+C. Installing the OptErd library
 ===============================================================
 cd $WORK_TOP
 svn co https://github.com/Maratyszcza/OptErd/trunk OptErd
@@ -55,7 +55,7 @@ prefix=$WORK_TOP/ERDlib make install
 
 
 ===============================================================
-D. Installing gtfock
+D. Installing GTFock
 ===============================================================
 cd $WORK_TOP
 svn co http://gtfock.googlecode.com/svn/trunk gtfock
