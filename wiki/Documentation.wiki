@@ -25,6 +25,5 @@ mpirun -np <nprocs> ./scf <basis> <xyz> <nprow> <npcol> <np2> <ntasks> <niters>
 
 For example, the following command run the SCF code on graphene_12_54_114.xyz with 12 MPI processes for 10 iterations. The number of processes used for purification is 2 x 2 x 2 = 8.
 {{{
-mpirun -np 12 ./pscf/scf data/guess/cc-pvdz.gbs \
-       data/graphene/graphene_12_54_114.xyz 3 4 2 4 10
+mpirun -np 12 ./pscf/scf data/guess/cc-pvdz.gbs data/graphene/graphene_12_54_114.xyz 3 4 2 4 10
 }}}
