@@ -6,6 +6,7 @@
 #include <string.h>
 #include <math.h>
 #include <mpi.h>
+#include <sys/time.h>
 
 #include "pdgemm.h"
 
@@ -100,6 +101,7 @@ int pdgemm3D(int myrow, int mycol, int mygrd,
         gettimeofday(&tv1, NULL);
         cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans, ncols, ncols,
                     ncols, 1.0, A, ncols, &A_i[0], ncols, 0.0, &S_i[0], ncols);
+        gettimeofday(&tv2, NULL);
         if (dgemm_time != NULL) {
             *dgemm_time += (tv2.tv_sec - tv1.tv_sec) +
                            (tv2.tv_usec - tv1.tv_usec) / 1000.0 / 1000.0;
@@ -138,6 +140,7 @@ int pdgemm3D(int myrow, int mycol, int mygrd,
         gettimeofday(&tv1, NULL);
         cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, ncols, ncols,
                     ncols, 1.0, A, ncols, &S_i[0], ncols, 0.0, &C_i[0], ncols);
+        gettimeofday(&tv2, NULL);
         if (dgemm_time != NULL) {
             *dgemm_time += (tv2.tv_sec - tv1.tv_sec) +
                            (tv2.tv_usec - tv1.tv_usec) / 1000.0 / 1000.0;
