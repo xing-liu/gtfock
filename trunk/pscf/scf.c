@@ -430,7 +430,7 @@ int main (int argc, char **argv)
             printf("    Purification Statistics:\n");
             printf("      average totaltime  = %.3lf\n"
                    "      average timetr     = %.3lf\n"
-                   "      average timedgemm  = %.3lf, %.3lf Gflops\n",
+                   "      average timedgemm  = %.3lf, %.3lf Gflops\n"
                    "      average timepdgemm = %.3lf, %.3lf Gflops\n",
                    purif_timepass / purif->np_purif,
                    purif_timetr / purif->np_purif,

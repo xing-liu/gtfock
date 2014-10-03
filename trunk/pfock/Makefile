@@ -17,7 +17,7 @@ INC = -I./                  \
       -I../include          \
       -I${MPI_INCDIR}       \
       -I${SCALAPACK_INCDIR} \
-      -I${BLAS_INCDIR}      \      
+      -I${BLAS_INCDIR}      \
       -I${GA_INCDIR}        \
       -I${ERD_INCDIR}
 
