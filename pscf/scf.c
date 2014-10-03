@@ -415,9 +415,12 @@ int main (int argc, char **argv)
 #ifdef __SCF_TIMING__
         PFock_getStatistics(pfock);
         double purif_timedgemm;
+        double purif_timepdgemm;
         double purif_timepass;
         double purif_timetr;
         MPI_Reduce(&purif->timedgemm, &purif_timedgemm,
+                   1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+        MPI_Reduce(&purif->timepdgemm, &purif_timepdgemm,
                    1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
         MPI_Reduce(&purif->timepass, &purif_timepass,
                    1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
@@ -425,14 +428,18 @@ int main (int argc, char **argv)
                    1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
         if (myrank == 0) {
             printf("    Purification Statistics:\n");
-            printf("      average totaltime = %.3lf\n"
-                   "      average timetr    = %.3lf\n"
-                   "      average timedgemm = %.3lf, %.3lf Gflops\n",
+            printf("      average totaltime  = %.3lf\n"
+                   "      average timetr     = %.3lf\n"
+                   "      average timedgemm  = %.3lf, %.3lf Gflops\n",
+                   "      average timepdgemm = %.3lf, %.3lf Gflops\n",
                    purif_timepass / purif->np_purif,
                    purif_timetr / purif->np_purif,
                    purif_timedgemm / purif->np_purif,
                    (it * 2.0 + 4.0) *
-                   purif_flops / (purif_timedgemm / purif->np_purif) / 1e9);
+                   purif_flops / (purif_timedgemm / purif->np_purif) / 1e9,
+                   purif_timepdgemm / purif->np_purif,
+                   (it * 2.0 + 4.0) *
+                   purif_flops / (purif_timepdgemm / purif->np_purif) / 1e9);
         }
 #endif
     } /* for (iter = 0; iter < NITERATIONS; iter++) */

@@ -262,6 +262,7 @@ int compute_purification (purif_t * purif, double *F_block, double *D_block)
     struct timeval tv4;
     int it;
     purif->timedgemm = 0.0;
+    purif->timepdgemm = 0.0;
     purif->timepass = 0.0;
     purif->timetr = 0.0;
 
@@ -376,12 +377,14 @@ int compute_purification (purif_t * purif, double *F_block, double *D_block)
         // convergence appears slow at first, before accelerating at end
         for (it = 0; it < MAX_PURF_ITERS; it++) {
             gettimeofday(&tv1, NULL);
+            double tmp_time;
             pdgemm3D(myrow, mycol, mygrd, comm_row, comm_col, comm_grd,
                      comm0, nr, nc, nrows, ncols, D_block, D2_block,
-                     D3_block, &tmpbuf);
+                     D3_block, &tmpbuf, &tmp_time);
             gettimeofday(&tv2, NULL);
-            purif->timedgemm += (tv2.tv_sec - tv1.tv_sec) +
+            purif->timepdgemm += (tv2.tv_sec - tv1.tv_sec) +
                 (tv2.tv_usec - tv1.tv_usec) / 1000.0 / 1000.0;
+            purif->timedgemm += tmp_time;
 
             gettimeofday(&tv1, NULL);
 
@@ -462,14 +465,17 @@ int compute_purification (purif_t * purif, double *F_block, double *D_block)
         }
 
         gettimeofday(&tv1, NULL);
+        double tmp_time;
         pdgemm3D_2(myrow, mycol, mygrd, comm_row, comm_col, comm_grd,
                    comm0, nr, nc, nrows, ncols,
-                   X_block, D_block, workm, &tmpbuf);
+                   X_block, D_block, workm, &tmpbuf, &tmp_time);
+        purif->timedgemm += tmp_time;
         pdgemm3D_2(myrow, mycol, mygrd, comm_row, comm_col, comm_grd,
                    comm0, nr, nc, nrows, ncols,
-                   workm, X_block, D_block, &tmpbuf);
+                   workm, X_block, D_block, &tmpbuf, &tmp_time);
+        purif->timedgemm += tmp_time;
         gettimeofday(&tv2, NULL);
-        purif->timedgemm += (tv2.tv_sec - tv1.tv_sec) +
+        purif->timepdgemm += (tv2.tv_sec - tv1.tv_sec) +
             (tv2.tv_usec - tv1.tv_usec) / 1000.0 / 1000.0;
 
         gettimeofday(&tv4, NULL);
@@ -529,10 +535,10 @@ void compute_diis (PFock_t pfock, purif_t * purif,
             // Ctator = X*(F*D*S - S*D*F)*X;
             pdgemm3D_2(myrow, mycol, mygrd, comm_row, comm_col, comm_grd,
                        comm0, nr, nc, nrows, ncols,
-                       F_block, D_block, workm, &tmpbuf);
+                       F_block, D_block, workm, &tmpbuf, NULL);
             pdgemm3D_2(myrow, mycol, mygrd, comm_row, comm_col, comm_grd,
                        comm0, nr, nc, nrows, ncols,
-                       workm, S_block, cur_diis, &tmpbuf);
+                       workm, S_block, cur_diis, &tmpbuf, NULL);
             if (purif->runpurif == 1) {
                 int dest;
                 coords[0] = mycol;
@@ -553,10 +559,10 @@ void compute_diis (PFock_t pfock, purif_t * purif,
             }
             pdgemm3D_2(myrow, mycol, mygrd, comm_row, comm_col, comm_grd,
                        comm0, nr, nc, nrows, ncols, X_block, cur_diis,
-                       workm, &tmpbuf);
+                       workm, &tmpbuf, NULL);
             pdgemm3D_2(myrow, mycol, mygrd, comm_row, comm_col, comm_grd,
                        comm0, nr, nc, nrows, ncols, workm, X_block,
-                       cur_diis, &tmpbuf);
+                       cur_diis, &tmpbuf, NULL);
             if (purif->runpurif == 1) {
                 // b_mat(i,j) = dot(vecs(:,i), vecs(:,j));
                 double _dot[LDBMAT];
@@ -591,10 +597,10 @@ void compute_diis (PFock_t pfock, purif_t * purif,
         // F = X*F*X;
         pdgemm3D_2(myrow, mycol, mygrd, comm_row, comm_col, comm_grd,
                    comm0, nr, nc, nrows, ncols,
-                   X_block, F_block, workm, &tmpbuf);
+                   X_block, F_block, workm, &tmpbuf, NULL);
         pdgemm3D_2(myrow, mycol, mygrd, comm_row, comm_col, comm_grd,
                    comm0, nr, nc, nrows, ncols, workm,
-                   X_block, cur_F, &tmpbuf);
+                   X_block, cur_F, &tmpbuf, NULL);
         // extrapolate
         if (iter > 1) {
             if (purif->runpurif == 1) {
