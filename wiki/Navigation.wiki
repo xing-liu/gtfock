@@ -3,5 +3,4 @@
   * [Documentation Documentation]
   * [Publications]
   * [Changelog Changelog]
-  * [License License]
   * [Acknowledgements Acknowledgements]
