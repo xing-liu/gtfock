@@ -54,7 +54,7 @@ static void initial_guess(PFock_t pfock, BasisSet_t basis, int ispurif,
             CInt_getInitialGuess(basis, i, &guess, &spos, &epos);
             int ld = epos - spos + 1;   
             for (int x = 0; x < ld; x++) {
-                N_neutral += guess[x * ld + x] * 2.0;
+                N_neutral += guess[x * ld + x];
             }
         }
         
@@ -80,7 +80,7 @@ static void initial_guess(PFock_t pfock, BasisSet_t basis, int ispurif,
                      ldD, D_block);
         for (int x = rowstart; x <= rowend; x++) {
             for (int y = colstart; y <= colend; y++) {
-                D_block[(x - rowstart) * ldD + (y - colstart)] *= R;
+                D_block[(x - rowstart) * ldD + (y - colstart)] *= R/2.0;
             }
         }
     }
@@ -310,7 +310,7 @@ int main (int argc, char **argv)
         printf("Initializing pfock ...\n");
     }
     PFock_t pfock;
-    PFock_create(basis, nprow_fock, npcol_fock, nblks_fock, 1e-10,
+    PFock_create(basis, nprow_fock, npcol_fock, nblks_fock, 1e-11,
                  MAX_NUM_D, IS_SYMM, &pfock);
     if (myrank == 0) {
         double mem_cpu;
@@ -380,7 +380,7 @@ int main (int argc, char **argv)
                        energy);
             }
         }
-        if (iter > 0 && fabs (energy - energy0) < 1e-10) {
+        if (iter > 0 && fabs (energy - energy0) < 1e-11) {
             niters = iter + 1;
             break;
         }
