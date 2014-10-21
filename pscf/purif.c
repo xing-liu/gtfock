@@ -254,7 +254,7 @@ void destroy_purif (purif_t * purif)
 }
 
 
-int compute_purification (purif_t * purif, double *F_block, double *D_block)
+int compute_purification(purif_t * purif, double *F_block, double *D_block)
 {
     struct timeval tv1;
     struct timeval tv2;
@@ -641,7 +641,7 @@ void compute_diis (PFock_t pfock, purif_t * purif,
 }
 
 
-#if 1
+#if 0
 static void peig(int ga_A, int ga_B, int n, int nprow, int npcol, double *eval)
 {
     int myrank;

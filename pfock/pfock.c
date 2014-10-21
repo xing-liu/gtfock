@@ -1156,7 +1156,7 @@ PFockStatus_t PFock_getMat(PFock_t pfock, PFockMatType_t type, int index,
     ga = pfock->gatable[type];
     NGA_Get(ga[index], lo, hi, mat, ld);
 
-#ifndef _SCF_
+#ifndef __SCF__
     if (PFOCK_MAT_TYPE_F == type) {
         int sizerow = rowend - rowstart + 1;
         int sizecol = colend - colstart + 1;
