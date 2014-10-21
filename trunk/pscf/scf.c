@@ -45,7 +45,7 @@ static void initial_guess(PFock_t pfock, BasisSet_t basis, int ispurif,
     double R = 1.0;
     if (myrank == 0) {
         int num_atoms = CInt_getNumAtoms(basis);
-        double Q = CInt_getTotalCharge(basis);
+        int Q = CInt_getTotalCharge(basis);
         double N_neutral = 0.0;
         for (int i = 0; i < num_atoms; i++) {
             double *guess;
@@ -58,7 +58,7 @@ static void initial_guess(PFock_t pfock, BasisSet_t basis, int ispurif,
             }
         }
         
-        if (Q != 0.0 && N_neutral != 0.0) {
+        if (Q != 0 && N_neutral != 0.0) {
             R = (N_neutral - Q)/N_neutral;
         }
         for (int i = 0; i < num_atoms; i++) {
@@ -255,6 +255,7 @@ int main (int argc, char **argv)
         printf("  molecule:  %s\n", fname);
         fname = basename(argv[1]);
         printf("  basisset:  %s\n", fname);
+        printf("  charge     = %d\n", CInt_getTotalCharge(basis));
         printf("  #atoms     = %d\n", natoms);
         printf("  #shells    = %d\n", nshells);
         printf("  #functions = %d\n", nfunctions);
