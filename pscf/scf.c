@@ -45,21 +45,10 @@ static void initial_guess(PFock_t pfock, BasisSet_t basis, int ispurif,
     double R = 1.0;
     if (myrank == 0) {
         int num_atoms = CInt_getNumAtoms(basis);
+        int N_neutral = CInt_getNneutral(basis); 
         int Q = CInt_getTotalCharge(basis);
-        double N_neutral = 0.0;
-        for (int i = 0; i < num_atoms; i++) {
-            double *guess;
-            int spos;
-            int epos;
-            CInt_getInitialGuess(basis, i, &guess, &spos, &epos);
-            int ld = epos - spos + 1;   
-            for (int x = 0; x < ld; x++) {
-                N_neutral += guess[x * ld + x];
-            }
-        }
-        
-        if (Q != 0 && N_neutral != 0.0) {
-            R = (N_neutral - Q)/N_neutral;
+        if (Q != 0 && N_neutral != 0) {
+            R = (N_neutral - Q)/(double)N_neutral;
         }
         for (int i = 0; i < num_atoms; i++) {
             double *guess;
