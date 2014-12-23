@@ -1088,6 +1088,7 @@ PFockStatus_t PFock_putDenMat(int rowstart, int rowend,
 PFockStatus_t PFock_putDenMatGA(int ga, int index, PFock_t pfock)
 {
     GA_Copy(ga, pfock->ga_D[index]);
+    return PFOCK_STATUS_SUCCESS;
 }
 
 
@@ -1190,7 +1191,7 @@ PFockStatus_t PFock_getMat(PFock_t pfock, PFockMatType_t type,
 PFockStatus_t PFock_getMatGA(PFock_t pfock, PFockMatType_t type,
                              int index, int ga)
 {
-    int my_ga = pfock->gatable[type];
+    int *my_ga = pfock->gatable[type];
     GA_Copy(my_ga[index], ga);
     
  #ifndef __SCF__
@@ -1198,9 +1199,11 @@ PFockStatus_t PFock_getMatGA(PFock_t pfock, PFockMatType_t type,
         int ga_K = pfock->ga_K[index];
         double fone = 1.0;
         double fzero = 0.0;
-        GA_Add(&fone, ga_K, fzero, ga, ga);
+        GA_Add(&fone, ga_K, &fzero, ga, ga);
     }    
-#endif   
+#endif
+
+    return PFOCK_STATUS_SUCCESS;
 }
 
 
@@ -2015,10 +2018,4 @@ PFockStatus_t PFock_getStatistics(PFock_t pfock)
     }
     
     return PFOCK_STATUS_SUCCESS;
-}
-
-
-PFockStatus_t PFock_bcastBasis(BasisSet_t basis) 
-{
-
 }
