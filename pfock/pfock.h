@@ -12,6 +12,7 @@
 struct PFock {
     BasisSet_t basis;
 
+    int input_type;
     int nthreads;
     int max_numdmat;
     int num_dmat;

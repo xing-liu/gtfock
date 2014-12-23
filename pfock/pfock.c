@@ -340,18 +340,15 @@ static PFockStatus_t create_GA (PFock_t pfock)
     nprow = pfock->nprow;
     npcol = pfock->npcol;
     map = (int *)PFOCK_MALLOC(sizeof(int) * (nprow + npcol));
-    if (NULL == map)
-    {
-        PFOCK_PRINTF (1, "memory allocation failed\n");
+    if (NULL == map) {
+        PFOCK_PRINTF(1, "memory allocation failed\n");
         return PFOCK_STATUS_ALLOC_FAILED;
     }
     
-    for (i = 0; i < nprow; i++)
-    {       
+    for (i = 0; i < nprow; i++) {       
         map[i] = pfock->rowptr_f[i];
     }   
-    for (i = 0; i < npcol; i++)
-    {
+    for (i = 0; i < npcol; i++) {
         map[i + nprow] = pfock->colptr_f[i];
     } 
     dims[0] = nbf;
@@ -387,14 +384,14 @@ static PFockStatus_t create_GA (PFock_t pfock)
         }
     
         sprintf(str, "F_%d", i);
-        pfock->ga_F[i] = GA_Duplicate(pfock->ga_D[0], str);    
+        pfock->ga_F[i] = GA_Duplicate(pfock->ga_D[0], str);
         if (0 == pfock->ga_F[i]) {
             PFOCK_PRINTF(1, "GA allocation failed\n");
             return PFOCK_STATUS_ALLOC_FAILED;
         }
 
         sprintf (str, "K_%d", i);
-        pfock->ga_K[i] = GA_Duplicate(pfock->ga_D[0], str);    
+        pfock->ga_K[i] = GA_Duplicate(pfock->ga_D[0], str);
         if (0 == pfock->ga_K[i]) {
             PFOCK_PRINTF(1, "GA allocation failed\n");
             return PFOCK_STATUS_ALLOC_FAILED;
@@ -813,7 +810,7 @@ PFockStatus_t PFock_create(BasisSet_t basis, int nprow, int npcol, int ntasks,
         return PFOCK_STATUS_ALLOC_FAILED;
     }
     memset(pfock, 0, sizeof(PFock_t));
-
+    
     // check if MPI is initialized
     int flag;    
     MPI_Initialized(&flag);
@@ -1088,6 +1085,12 @@ PFockStatus_t PFock_putDenMat(int rowstart, int rowend,
 }
 
 
+PFockStatus_t PFock_putDenMatGA(int ga, int index, PFock_t pfock)
+{
+    GA_Copy(ga, pfock->ga_D[index]);
+}
+
+
 PFockStatus_t PFock_fillDenMat(double value, int index,
                                PFock_t pfock)
 {
@@ -1127,7 +1130,8 @@ PFockStatus_t PFock_sync(PFock_t pfock)
 }
 
 
-PFockStatus_t PFock_getMat(PFock_t pfock, PFockMatType_t type, int index,
+PFockStatus_t PFock_getMat(PFock_t pfock, PFockMatType_t type,
+                           int index,
                            int rowstart, int rowend,
                            int colstart, int colend,
                            int stride, double *mat)
@@ -1180,6 +1184,23 @@ PFockStatus_t PFock_getMat(PFock_t pfock, PFockMatType_t type, int index,
 #endif
 
     return PFOCK_STATUS_SUCCESS;    
+}
+
+
+PFockStatus_t PFock_getMatGA(PFock_t pfock, PFockMatType_t type,
+                             int index, int ga)
+{
+    int my_ga = pfock->gatable[type];
+    GA_Copy(my_ga[index], ga);
+    
+ #ifndef __SCF__
+    if (PFOCK_MAT_TYPE_F == type) {
+        int ga_K = pfock->ga_K[index];
+        double fone = 1.0;
+        double fzero = 0.0;
+        GA_Add(&fone, ga_K, fzero, ga, ga);
+    }    
+#endif   
 }
 
 
@@ -1994,4 +2015,10 @@ PFockStatus_t PFock_getStatistics(PFock_t pfock)
     }
     
     return PFOCK_STATUS_SUCCESS;
+}
+
+
+PFockStatus_t PFock_bcastBasis(BasisSet_t basis) 
+{
+
 }
