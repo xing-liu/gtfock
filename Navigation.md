@@ -1,0 +1,6 @@
+  * [Downloads](Downloads.md)
+  * [Installation](Installation.md)
+  * [Documentation](Documentation.md)
+  * [Publications](Publications.md)
+  * [Changelog](Changelog.md)
+  * [Acknowledgements](Acknowledgements.md)
