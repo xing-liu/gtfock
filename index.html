@@ -2,7 +2,7 @@
 <html lang="en-us">
   <head>
     <meta charset="UTF-8">
-    <title>Gtfock by xing-liu</title>
+    <title>GTFock</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
     <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
@@ -11,7 +11,7 @@
   </head>
   <body>
     <section class="page-header">
-      <h1 class="project-name">Gtfock</h1>
+      <h1 class="project-name">GTFock</h1>
       <h2 class="project-tagline">A distributed framework for Fock matrix construction</h2>
       <a href="https://github.com/xing-liu/gtfock" class="btn">View on GitHub</a>
       <a href="https://github.com/xing-liu/gtfock/zipball/master" class="btn">Download .zip</a>
@@ -27,13 +27,13 @@
 <p>Fock matrix construction is an essential kernel in many quantum chemistry calculations, including the Hartree-Fock (HF) method and Density Functional Theory (DFT) methods. GTFock uses a new scalable parallel algorithm for Fock matrix construction, which significantly reduces communication and has better load balance than other current codes. GTFock shows nearly linear speedup up to 1,000 nodes on the Stampede supercomputer and better scalability than NWChem on chemical systems that stress scalability.</p>
 
 <h1>
-<a id="spotlights" class="anchor" href="#spotlights" aria-hidden="true"><span class="octicon octicon-link"></span></a>Spotlights</h1>
+<a class="anchor" href="#spotlights" aria-hidden="true"><span class="octicon octicon-link"></span></a>Highlights</h1>
 
 <ul>
-<li>Uses a new scalable parallel algorithm that significantly reduces communication and has better load balance than other current nodes.</li>
+<li>Uses a new scalable parallel algorithm that significantly reduces communication and has better load balance than other algorithms.</li>
 <li>Provides a generalized computational interface for constructing Fock matrices which can be easily used to build customized HF or DFT applications.</li>
-<li>Can compute multiple Fock matrices on one run.</li>
-<li>The input density matrices can be non-symmetric.</li>
+<li>Can compute multiple Fock matrices from multiple density matrices with one set of integral calculations.</li>
+<li>Optimized for both symmetric and nonsymmetric density matrices.</li>
 </ul>
 
 <h1>
